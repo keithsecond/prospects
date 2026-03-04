@@ -1,9 +1,14 @@
 
 # Playwright
-node_modules/
+/node_modules/
 /test-results/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
-/sites.json
+
+/.auth/
+/.env
+
+/test-data/
+/utilities/
