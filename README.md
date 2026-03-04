@@ -1,0 +1,37 @@
+# PROSPECTS
+
+A Playwright tool to assist in employment search
+
+## Features
+
+- Contains a class for a easy CDP browser instantiation
+- Stateful status of job postings
+
+## Installation
+
+An existing [Playwright](https://playwright.dev/docs/intro) installation
+A running chrome browser with debugging port
+
+## Usage
+
+### Check CDP browser
+
+```sh
+npx playwright test -ui tests/uaWebdriver.spec.ts
+```
+
+### Check a website
+
+```sh
+npx playwright test tests/burnett.ts
+```
+
+### Check all websites - not recommended until CDP is confirmed
+
+```sh
+npx playwright test
+```
+
+## Disclaimer
+
+This tool is a proof of concept and should not be used in a production environment. It is designed for educational purposes only. According to many, if not all, of the website's terms of service, the use of robots, spiders, manual, and/or automatic processes, or devices to data-mine, data-crawl, scrape, or index the Website in any manner is prohibited. Use this tool responsibly and at your own risk.

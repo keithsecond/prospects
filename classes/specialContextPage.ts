@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page, type Browser } from '@playwright/test';
+import { Page, Browser } from '@playwright/test';
+import { chromium } from "playwright";
 
 export class SpecialContextPage {
     page: Page;
@@ -12,15 +13,15 @@ export class SpecialContextPage {
 
     async noNavigator() {
         this.context = await this.browser.newContext({
-            storageState: './auth.json',
         });
         this.page = await this.context.newPage();
         await this.page.addInitScript("delete Object.getPrototypeOf(navigator).webdriver");
-//        await this.page.goto('https://playwright.dev');
-
-/*     await this.page.addInitScript(() => {
-        // TypeScript code within the evaluate function runs in the browser context
-        delete Object.getPrototypeOf(navigator).webdriver;
-    }); */
-  }
+    }
+    
+    async cdpBrowser() {
+        this.browser = await chromium.connectOverCDP('http://localhost:9222');
+        this.context = await this.browser.newContext();
+        this.page = await this.context.newPage();
+        console.log(this.browser.contexts().length);
+    }
 }
