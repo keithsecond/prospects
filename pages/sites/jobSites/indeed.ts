@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { SpecialContextPage } from '../../../classes/specialContextPage';
+import { SpecialContextPage } from '@classes/specialContextPage';
 
 export class IndeedPage extends SpecialContextPage {
 
