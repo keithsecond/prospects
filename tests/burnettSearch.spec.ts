@@ -7,11 +7,10 @@ test.describe('Burnett Tests', () => {
     const jobDesktop = 'desktop support';
     const jobSupport = 'technical support';
     const jobSDET = 'SDET';
-    const jobAll = '';
     const jobTerms: string[] = [jobDesktop, jobSupport, jobSDET, jobQA];
 
     for (const term of jobTerms) {
-        test.use({ skills: term });
+        test.use({city: 'Houston, TX', jobType: 'Information Technology', skills: term });
         test (`search ${term}`, async ({ burnettSearch }) => {
             const container = burnettSearch.resultContainer;
             const jobs = burnettSearch.jobs;
