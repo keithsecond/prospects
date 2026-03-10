@@ -7,6 +7,25 @@ A Playwright tool to assist in employment search
 - Contains a class for a easy CDP browser instantiation
 - Stateful status of job postings
 
+```sh
+prospects/
+│
+├── auth/                   # Authentication storage
+├── tests/                  # Test specifications
+    └── jobResults.json     # Search results JSON data store
+├── pages/                  # Page Object Model classes
+├── fixtures/               # Shared test fixtures (if used)
+├── classes/                # Browser helper classes
+├── utils/                  # Helper utilities
+├── playwright.config.ts
+├── package.json
+├── README.md
+└── tsconfig.json
+```
+<img src="./Playwright Test Report Summary.png" alt="report detail" />
+
+---
+
 ## Installation
 
 [Playwright](https://playwright.dev/docs/intro) chromium installation
@@ -27,7 +46,14 @@ npx playwright test -ui tests/uaWebdriver.spec.ts
 ### Check a website
 
 ```sh
-npx playwright test tests/burnett.ts
+npx playwright test tests/burnettSearch.spec.ts
+```
+
+### CLI job search
+
+```sh
+export SEARCH="search term"; \ 
+npx playwright test tests/burnettSearch.spec.ts && unset SEARCH
 ```
 
 ### Check all websites - not recommended until CDP is confirmed
@@ -35,6 +61,8 @@ npx playwright test tests/burnett.ts
 ```sh
 npx playwright test
 ```
+
+<img src="./Playwright Test Report.png" alt="report detail" />
 
 ## Disclaimer
 

@@ -1,9 +1,11 @@
 import { expect, Locator, Page } from '@playwright/test';
+import { Job } from '@utils/utilities';
+
 
 export class Burnett {
     page: Page;
     skills: string;
-    location: string;
+    city: string;
     jobType: string;
     skillbox: Locator;
     locationText: Locator;
@@ -22,7 +24,7 @@ export class Burnett {
         skills?: string,
     ) {
         this.page = page;
-        this.location = location || '';
+        this.city = location || '';
         this.jobType = jobType || '';
         this.skills = skills || '';
         this.skillbox = page.getByRole('textbox', { name: 'Keywords' });
@@ -42,7 +44,7 @@ export class Burnett {
 
     async search() {
         await this.skillbox.fill(this.skills);
-        await this.locationText.fill(this.location);
+        await this.locationText.fill(this.city);
         await expect(this.locationComplete).toBeVisible();
         await this.locationComplete.click();
         await this.jobBox.click();
@@ -51,4 +53,27 @@ export class Burnett {
         await this.jobField.click();
         await this.submitButton.click();
     }
+
+    async getJobs(): Promise<Job[]> {
+        await this.resultContainer.all();
+        const foundJobs = this.jobs;
+        const count = await foundJobs.count();
+        const results: Job[] = [];
+        for (let i = 0; i < count; i++) {
+            const jobWeb = foundJobs.nth(i);
+            const title = await jobWeb.textContent();
+            const link = await jobWeb.getAttribute('href');
+            if (!link || link === '#') continue;
+            const id = link.split('/').pop()!;
+            results.push({
+                id,
+                title,
+                link,
+                status: '0',
+                date: new Date().toISOString().split('T')[0],
+                notes: ''
+            });
+        }
+    return results;
+  }
 }
