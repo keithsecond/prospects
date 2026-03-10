@@ -9,7 +9,11 @@ A Playwright tool to assist in employment search
 
 ## Installation
 
-An existing [Playwright](https://playwright.dev/docs/intro) installation
+[Playwright](https://playwright.dev/docs/intro) chromium installation
+```sh
+npx playwright install chromium
+```
+
 A running chrome browser with debugging port
 
 ## Usage
