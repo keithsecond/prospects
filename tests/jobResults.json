@@ -1,13 +1,19 @@
 {
+  "Status Definitions": {
+    "0": "new job",
+    "1": "applied",
+    "2": "recieved reply",
+    "3": "interviewing",
+    "4": "declined"
+  },
   "Burnett": {
-    "Site": "Burnett Specialists",
-    "URL": "https://jobs.burnettspecialists.com/jb/",
     "jobs": [
       {
         "id": "13717532",
         "title": "API Automation Test Engineer",
         "status": "0",
-        "date": "2026-03-09T16:22:50.514Z"
+        "date": "2026-03-10",
+        "notes": ""
       }
     ]
   }

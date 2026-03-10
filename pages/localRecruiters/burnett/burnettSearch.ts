@@ -1,12 +1,10 @@
-import { expect } from '@fixtures/burnett';
-import { Locator, Page } from 'playwright';
+import { expect, Locator, Page } from '@playwright/test';
 
 export class Burnett {
     page: Page;
     skills: string;
     location: string;
     jobType: string;
-
     skillbox: Locator;
     locationText: Locator;
     locationComplete: Locator;
@@ -16,8 +14,6 @@ export class Burnett {
     submitButton: Locator;
     jobs: Locator;
     resultContainer: Locator;
-    noResults: Locator;
-    jobRow: Locator;
 
     constructor(
         page: Page,
@@ -33,13 +29,11 @@ export class Burnett {
         this.locationText = page.getByRole('textbox', { name: 'Location' });
         this.locationComplete = page.getByRole('option', { name: location });
         this.jobBox = page.getByRole('combobox', { name: 'Job Function' });
-        this.jobOption = this.page.getByRole('listbox').locator('.category_listbox.listbox');
-        this.jobField = this.page.getByRole('option', { name: jobType });
+        this.jobOption = page.getByRole('listbox').locator('.category_listbox.listbox');
+        this.jobField = page.getByRole('option', { name: jobType });
         this.submitButton = page.getByRole('button', { name: ' Begin Searching' });
         this.jobs = page.locator('.job-post-href:not(.more-arrow)');
         this.resultContainer = page.locator('.JBSearchTemplate').first();
-        this.jobRow = page.locator('.job-post-row.jb-transition').first();
-        this.noResults = page.locator('#no_results');
     }
 
     async searchPage() {
