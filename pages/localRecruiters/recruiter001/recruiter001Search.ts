@@ -1,8 +1,8 @@
 import { expect, Locator, Page } from '@playwright/test';
-import { Job } from '@utils/utilities';
+import { Job, Utilities } from '@utils/utilities';
 
 
-export class Burnett {
+export class R001 {
     page: Page;
     skills: string;
     city: string;
@@ -39,7 +39,7 @@ export class Burnett {
     }
 
     async searchPage() {
-        await this.page.goto('https://jobs.burnettspecialists.com/index.smpl?arg=jb_search');
+        await this.page.goto(Utilities.URLS.R001);
     }
 
     async search() {

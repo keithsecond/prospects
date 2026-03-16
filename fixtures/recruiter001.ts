@@ -1,9 +1,9 @@
 import { test as base } from '@playwright/test';
-import { Burnett } from '@pages/localRecruiters/burnett/burnettSearch';
+import { R001 } from '@pages/localRecruiters/recruiter001/recruiter001Search';
 import { Utilities } from '@utils/utilities';
 
 type Fixtures = {
-    search: Burnett;
+    search: R001;
     utils: Utilities;
     city: string;
     jobType: string;
@@ -16,9 +16,9 @@ export const test = base.extend<Fixtures>({
     skills: ['', { option: true }],
 
     search: async ({ page, city, jobType, skills }, use) => {
-        const burnett = new Burnett(page, city, jobType, skills);
-        await burnett.searchPage();
-        await use(burnett);
+        const r001 = new R001(page, city, jobType, skills);
+        await r001.searchPage();
+        await use(r001);
     },
 
     utils: async ({}, use) => {

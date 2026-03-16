@@ -46,14 +46,14 @@ npx playwright test -ui tests/uaWebdriver.spec.ts
 ### Check a website
 
 ```sh
-npx playwright test tests/burnettSearch.spec.ts
+npx playwright test tests/r001Search.spec.ts
 ```
 
 ### CLI job search
 
 ```sh
 export SEARCH="search term"; \ 
-npx playwright test tests/burnettSearch.spec.ts && unset SEARCH
+npx playwright test tests/r001Search.spec.ts && unset SEARCH
 ```
 
 ### Check all websites - not recommended until CDP is confirmed

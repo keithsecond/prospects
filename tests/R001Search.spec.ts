@@ -1,13 +1,13 @@
-import { test } from '@fixtures/burnett';
+import { test } from '@fixtures/recruiter001';
 
-test.describe('Burnett Tests', () => {
+test.describe('r001 Tests', () => {
 
     if (process.env.SEARCH) { const searchQuery = process.env.SEARCH; 
         test.use({city: "Houston, TX", jobType: 'Information Technology', skills: searchQuery });
         test (`search ${searchQuery}`, async ({ search, utils }) => {
             await search.search();
             const jobs = await search.getJobs();
-            await utils.writeJobs('Burnett', jobs);
+            await utils.writeJobs('r001', jobs);
         })
         return;
     };
@@ -23,7 +23,7 @@ test.describe('Burnett Tests', () => {
         test (`search ${term}`, async ({ search, utils }) => {
             await search.search();
             const jobs = await search.getJobs();
-            await utils.writeJobs('Burnett', jobs);
+            await utils.writeJobs('r001', jobs);
         })
     }
 });
