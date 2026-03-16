@@ -7,13 +7,41 @@
     "4": "declined"
   },
   "Burnett": {
+    "Site": "Burnett Specialists",
+    "URL": "https://jobs.burnettspecialists.com/jb/",
     "jobs": [
       {
         "id": "13717532",
         "title": "API Automation Test Engineer",
-        "status": "0",
-        "date": "2026-03-10",
-        "notes": ""
+        "status": "1",
+        "date": "2026-03-11",
+        "notes": "https://jobs.burnettspecialists.com/jb/API-Automation-Test-Engineer-Jobs-in-Houston-TX/13717532"
+      }
+    ]
+  },
+  "VedaProf": {
+    "Site": "VedaProf",
+    "URL": "https://vedaprof.com/careers.html",
+    "jobs": [
+      {
+        "id": "",
+        "title": "Senior Quality Analysts",
+        "status": "1",
+        "date": "2026-03-12",
+        "notes": "follow up on 2026-03-19"
+      }
+    ]
+  },
+  "greenhouse.io": {
+    "Site": "greenhouse.io",
+    "URL": "https://job-boards.greenhouse.io/ttcglobal/jobs",
+    "jobs": [
+      {
+        "id": "5365054002",
+        "title": "Software QA Engineer",
+        "status": "1",
+        "date": "2026-03-12",
+        "notes": "TTC Global"
       }
     ]
   }

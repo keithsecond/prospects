@@ -1,37 +1,35 @@
-import { Locator } from '@playwright/test';
 import { readFile, writeFile } from 'fs/promises';
 import path from 'path';
 
+export type Job = {
+        id: string;
+        title: string | null;
+        link: string;
+        status: string;
+        date: string;
+        notes: string;
+    };
+
 export class Utilities {
 
-    async newJobsWriteJSON(allJobs: Locator[], key: string) {
-        const filePath = path.join(__dirname, '../tests/jobResults.json');
-        const fileData = await readFile(filePath, 'utf-8');
-        const data = JSON.parse(fileData);
-        if (!data[key]) {
-           data[key] = { jobs: [] };
-        }
-        const existingJobIds = new Set(data[key].jobs.map((job: { id: string; }) => job.id));
+    filePath = path.join(__dirname, '../tests/jobResults.json');
 
-        for (const jobWeb of allJobs) {
-            const jobTitle = await jobWeb.textContent();
-            const link = await jobWeb.getAttribute('href');
-            if (!link || link == '#') {
-                continue;
-            }
-            const jobID = link.split('/').pop();
-            const scrapedJobs = {
-                id: jobID,
-                title: jobTitle,
-                status: '0',
-                date: new Date().toISOString().split('T')[0],
-                notes: ''
-            };
-            if (!existingJobIds.has(scrapedJobs.id)) {
-                data[key].jobs.push(scrapedJobs);
-                existingJobIds.add(scrapedJobs.id);
-            }        
+    async writeJobs(key: string, jobs: Job[]) {
+        const fileData = await readFile(this.filePath, 'utf-8');
+        const data = JSON.parse(fileData);
+        console.log(data.Burnett, "jobs");
+        if (!data[key]) {
+            data[key] = { jobs: [] };
         }
-        await writeFile(filePath, JSON.stringify(data, null, 2));
+        const existingJobIds = new Set(
+            data[key].jobs.map((job: Job) => job.id)
+        );
+        console.log(existingJobIds, "existing")
+        for (const job of jobs) {
+            if (!existingJobIds.has(job.id)) {
+                data[key].jobs.push(job);
+            }
+        }
+        await writeFile(this.filePath, JSON.stringify(data, null, 2));
     }
 }

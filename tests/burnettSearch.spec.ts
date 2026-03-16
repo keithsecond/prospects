@@ -1,23 +1,29 @@
-import { test, expect } from '@fixtures/burnett';
-/* import { Utilities } from 'utils/utilities'; */
+import { test } from '@fixtures/burnett';
 
 test.describe('Burnett Tests', () => {
-    /* const utils = new Utilities(); */
+
+    if (process.env.SEARCH) { const searchQuery = process.env.SEARCH; 
+        test.use({city: "Houston, TX", jobType: 'Information Technology', skills: searchQuery });
+        test (`search ${searchQuery}`, async ({ search, utils }) => {
+            await search.search();
+            const jobs = await search.getJobs();
+            await utils.writeJobs('Burnett', jobs);
+        })
+        return;
+    };
+    
     const jobQA = 'quality assurance';
     const jobDesktop = 'desktop support';
     const jobSupport = 'technical support';
     const jobSDET = 'SDET';
-    const jobTerms: string[] = [jobDesktop, jobSupport, jobSDET, jobQA];
+    const jobTerms = [jobDesktop, jobSupport, jobSDET, jobQA];
 
     for (const term of jobTerms) {
-        test.use({city: 'Houston, TX', jobType: 'Information Technology', skills: term });
-        test (`search ${term}`, async ({ burnettSearch, utilities }) => {
-            const container = burnettSearch.resultContainer;
-            const jobs = burnettSearch.jobs;
-            await burnettSearch.search();
-            await expect(container, 'search produced results').toBeVisible();
-            const allJobs = await jobs.all();
-            await utilities.newJobsWriteJSON(allJobs, 'Burnett');
+        test.use({city: "Houston, TX", jobType: 'Information Technology', skills: term });
+        test (`search ${term}`, async ({ search, utils }) => {
+            await search.search();
+            const jobs = await search.getJobs();
+            await utils.writeJobs('Burnett', jobs);
         })
     }
 });

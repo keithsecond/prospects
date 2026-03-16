@@ -10,12 +10,13 @@ A Playwright tool to assist in employment search
 ```sh
 prospects/
 │
-├── auth/               # Authentication storage
-├── tests/              # Test specifications
-├── pages/              # Page Object Model classes
-├── fixtures/           # Shared test fixtures (if used)
-├── classes/            # Browser helper classes
-├── utils/              # Helper utilities
+├── auth/                   # Authentication storage
+├── tests/                  # Test specifications
+    └── jobResults.json     # Search results JSON data store
+├── pages/                  # Page Object Model classes
+├── fixtures/               # Shared test fixtures (if used)
+├── classes/                # Browser helper classes
+├── utils/                  # Helper utilities
 ├── playwright.config.ts
 ├── package.json
 ├── README.md
@@ -45,7 +46,14 @@ npx playwright test -ui tests/uaWebdriver.spec.ts
 ### Check a website
 
 ```sh
-npx playwright test tests/burnett.ts
+npx playwright test tests/burnettSearch.spec.ts
+```
+
+### CLI job search
+
+```sh
+export SEARCH="search term"; \ 
+npx playwright test tests/burnettSearch.spec.ts && unset SEARCH
 ```
 
 ### Check all websites - not recommended until CDP is confirmed
