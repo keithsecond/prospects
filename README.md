@@ -14,7 +14,7 @@ prospects/
 ├── tests/                  # Test specifications
 ├── pages/                  # Page Object Model classes
 ├── fixtures/               # Shared test fixtures
-├── classes/                # Browser helper classes
+├── classes/                # Helper classes
 ├── tests-data/             # JSON datastores - .gitignore
     └── jobResults.json     # Search results datastore - .gitignore
     └── sites.json          # Sites to search datastore - .gitignore

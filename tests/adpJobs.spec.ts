@@ -1,6 +1,6 @@
 import { test } from '@playwright/test';
 import { ADP } from '@pages/adpSearch';
-import { Utilities } from '@fixtures/utilities';
+import { Utilities } from '@classes/utilities';
 
 test.describe('ADP Workboards', () => {
     const adpSites = Utilities.getSitesByProvider("ADP");

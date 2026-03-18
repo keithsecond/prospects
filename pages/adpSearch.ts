@@ -1,5 +1,5 @@
 import { expect, Locator, Page, BrowserContext } from '@playwright/test';
-import { Job, Utilities } from '@fixtures/utilities';
+import { Job, Utilities } from '@classes/utilities';
 
 export class ADP {
     page: Page;
