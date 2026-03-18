@@ -1,6 +1,6 @@
 import { test as base } from '@playwright/test';
 import { R001 } from '@pages/localRecruiters/recruiter001/recruiter001Search';
-import { Utilities } from '@fixtures/utilities';
+import { Utilities } from '@classes/utilities';
 
 type Fixtures = {
     search: R001;
