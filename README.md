@@ -17,7 +17,7 @@ prospects/
 ├── classes/                # Browser helper classes
 ├── tests-data/             # JSON datastores - .gitignore
     └── jobResults.json     # Search results datastore - .gitignore
-    └── sites.json          # Search sites datastore - .gitignore
+    └── sites.json          # Sites to search datastore - .gitignore
 ├── playwright.config.ts
 ├── package.json
 ├── README.md
