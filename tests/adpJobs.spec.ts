@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';  // Switch to base test (no custom fixture needed)
+import { test } from '@playwright/test';
 import { ADP } from '@pages/adpSearch';
 import { Utilities } from '@fixtures/utilities';
 

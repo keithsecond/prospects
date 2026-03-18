@@ -8,9 +8,6 @@ export class ADP {
     jobContainer: Locator;
     job: Locator;
     backButton: Locator;
-//    jobID: Locator;
-
-
 
     constructor(
         page: Page,
@@ -23,7 +20,6 @@ export class ADP {
         this.jobContainer = page.locator('.current-openings-list-container')
         this.job = page.locator('.break-words')
         this.backButton = page.getByRole('button', {name: 'Back'})
-//        this.jobID = this.job.getAttribute('id')
     }
 
     async searchPage() {     

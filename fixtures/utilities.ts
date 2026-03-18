@@ -1,6 +1,6 @@
 import { readFile, writeFile } from 'fs/promises';
 import path from 'path';
-import sites from '../utilities/sites.json';
+import sites from '../test-data/sites.json';
 
 export type Job = {
     id: string;
@@ -43,14 +43,11 @@ export class Utilities {
         ].filter(site => site.Provider === provider);
     }
 
-    filePath = path.join(__dirname, '../tests/jobResults.json');
+    filePath = path.join(__dirname, '../test-data/jobResults.json');
 
     async writeJobs(key: string, jobs: Job[]) {
         const fileData = await readFile(this.filePath, 'utf-8');
         const data = JSON.parse(fileData);
-/*         if (!data[key]) {
-            data[key] = { jobs: [] };
-        } */
         const org = Utilities.ORGS[key] || key;
         const url = Utilities.URLS[key] || "";
         if (!data[org]) {

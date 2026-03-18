@@ -12,11 +12,12 @@ prospects/
 │
 ├── auth/                   # Authentication storage
 ├── tests/                  # Test specifications
-    └── jobResults.json     # Search results JSON data store
 ├── pages/                  # Page Object Model classes
-├── fixtures/               # Shared test fixtures (if used)
+├── fixtures/               # Shared test fixtures
 ├── classes/                # Browser helper classes
-├── utils/                  # Helper utilities
+├── tests-data/             # JSON datastores - .gitignore
+    └── jobResults.json     # Search results datastore - .gitignore
+    └── sites.json          # Search sites datastore - .gitignore
 ├── playwright.config.ts
 ├── package.json
 ├── README.md
@@ -65,7 +66,7 @@ npx playwright test
 ## Todo
 
 - Document params
-- Continue to optimize sites.json mapping tools
+- Continue to optimize json mapping tools
 
 <img src="./Playwright Test Report.png" alt="report detail" />
 
