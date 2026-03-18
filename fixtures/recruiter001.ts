@@ -1,6 +1,6 @@
 import { test as base } from '@playwright/test';
 import { R001 } from '@pages/localRecruiters/recruiter001/recruiter001Search';
-import { Utilities } from '@utils/utilities';
+import { Utilities } from '@fixtures/utilities';
 
 type Fixtures = {
     search: R001;
@@ -27,7 +27,7 @@ export const test = base.extend<Fixtures>({
     },
 });
 
-export { expect, Locator } from '@playwright/test';
+//export { expect, Locator } from '@playwright/test';
 
 
 

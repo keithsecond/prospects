@@ -1,5 +1,5 @@
 import { expect, Locator, Page } from '@playwright/test';
-import { Job, Utilities } from '@utils/utilities';
+import { Job, Utilities } from '@fixtures/utilities';
 
 
 export class R001 {
@@ -74,6 +74,6 @@ export class R001 {
                 notes: ''
             });
         }
-    return results;
-  }
+        return results;
+    }
 }

@@ -18,12 +18,12 @@ test.describe('r001 Tests', () => {
     const jobSDET = 'SDET';
     const jobTerms = [jobDesktop, jobSupport, jobSDET, jobQA];
 
-    for (const term of jobTerms) {
+    jobTerms.forEach(term => {
         test.use({city: "Houston, TX", jobType: 'Information Technology', skills: term });
         test (`search ${term}`, async ({ search, utils }) => {
             await search.search();
             const jobs = await search.getJobs();
             await utils.writeJobs('r001', jobs);
         })
-    }
+    });
 });

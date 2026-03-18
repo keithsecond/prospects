@@ -62,6 +62,11 @@ npx playwright test tests/r001Search.spec.ts && unset SEARCH
 npx playwright test
 ```
 
+## Todo
+
+- Document params
+- Continue to optimize sites.json mapping tools
+
 <img src="./Playwright Test Report.png" alt="report detail" />
 
 ## Disclaimer
