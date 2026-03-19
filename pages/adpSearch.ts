@@ -1,4 +1,4 @@
-import { expect, Locator, Page, BrowserContext } from '@playwright/test';
+import { expect, Locator, Page } from '@playwright/test';
 import { Job, Utilities } from '@classes/utilities';
 
 export class ADP {
@@ -55,7 +55,7 @@ export class ADP {
             await this.backButton.click();
             await this.page.waitForLoadState('networkidle');
         }
-    return results;    
+        return results;
     }
 }    
 
