@@ -3,6 +3,7 @@ import { Job, Utilities } from '@classes/utilities';
 
 export class ATJ {
     page: Page;
+    utils: Utilities;
     id: string;
     container: Locator;
     job: Locator;
@@ -13,6 +14,7 @@ export class ATJ {
 
     ) {
         this.page = page;
+        this.utils = new Utilities();
         this.id = id || '';
         this.container = this.page.locator('.list-group-item-heading')
         this.job = this.container.getByRole('link')
@@ -25,30 +27,22 @@ export class ATJ {
 
     async getJobs(): Promise<Job[]> {
         const foundJobs = this.job;
-        const count = await foundJobs.count()
-        console.log(count, 'count')
-        const results: Job[] = [];
+        const count = await foundJobs.count();
+        console.log(count, 'count');
+        const rawJobs = [] as Array<{id: string; title: string; link: string}>;
         for (let i = 0; i < count; i++) {
             const jobWeb = foundJobs.nth(i);
             const title = await jobWeb.innerText();
-            const link = await jobWeb.getAttribute('href')
+            const link = await jobWeb.getAttribute('href');
             if (!link) continue;
             const id = (link.match(/apply\/([^/]+)/)?.[1]) || '';
-            results.push({
-                id,
-                title,
-                link,
-                status: '0',
-                date: new Date().toISOString().split('T')[0],
-                notes: ''
-            });
+            if (!id) continue;
+            rawJobs.push({id, title, link});
         }
-        return results;
+        return this.utils.normalizeJobs(rawJobs);
     }
 
 }
-
-
 
 
 

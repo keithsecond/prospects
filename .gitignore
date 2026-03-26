@@ -6,11 +6,10 @@
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+/.vscode/
 
 /.auth/
 /.env
 
 /test-data/
 /utilities/
-
-/tests/jobResults.json

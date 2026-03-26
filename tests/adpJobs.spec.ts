@@ -4,6 +4,7 @@ import { Utilities } from '@classes/utilities';
 
 test.describe('ADP Workboards', () => {
     const adpSites = Utilities.getSitesByProvider("ADP");
+    const utils = new Utilities();
 
     adpSites.forEach(site => {
         test(`adp search ${site.org}`, async ({ page }) => {
@@ -11,7 +12,6 @@ test.describe('ADP Workboards', () => {
             await adp.searchPage(); 
             await adp.search();
             const jobs = await adp.getJobs();
-            const utils = new Utilities();
             if (site.id !== undefined)
             await utils.writeJobs(site.id, jobs);
         });

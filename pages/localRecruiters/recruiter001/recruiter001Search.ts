@@ -4,6 +4,7 @@ import { Job, Utilities } from '@classes/utilities';
 
 export class R001 {
     page: Page;
+    utils: Utilities;
     skills: string;
     city: string;
     jobType: string;
@@ -24,6 +25,7 @@ export class R001 {
         skills?: string,
     ) {
         this.page = page;
+        this.utils = new Utilities();
         this.city = location || '';
         this.jobType = jobType || '';
         this.skills = skills || '';
@@ -58,22 +60,16 @@ export class R001 {
         await this.resultContainer.all();
         const foundJobs = this.jobs;
         const count = await foundJobs.count();
-        const results: Job[] = [];
+        const rawJobs = [] as Array<{id: string; title: string; link: string}>;
         for (let i = 0; i < count; i++) {
             const jobWeb = foundJobs.nth(i);
             const title = await jobWeb.textContent();
             const link = await jobWeb.getAttribute('href');
             if (!link || link === '#') continue;
-            const id = link.split('/').pop()!;
-            results.push({
-                id,
-                title,
-                link,
-                status: '0',
-                date: new Date().toISOString().split('T')[0],
-                notes: ''
-            });
+            const id = link.split('/').pop() || '';
+            if (!id || !title) continue;
+            rawJobs.push({id, title, link});
         }
-        return results;
+        return this.utils.normalizeJobs(rawJobs);
     }
 }

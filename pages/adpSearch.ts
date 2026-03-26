@@ -3,6 +3,7 @@ import { Job, Utilities } from '@classes/utilities';
 
 export class ADP {
     page: Page;
+    utils: Utilities;
     id: string;
     jobMenu: Locator;
     jobContainer: Locator;
@@ -15,6 +16,7 @@ export class ADP {
 
     ) {
         this.page = page;
+        this.utils = new Utilities();
         this.id = id || '';
         this.jobMenu = page.getByRole('link', { name: 'Current Openings'})
         this.jobContainer = page.locator('.current-openings-list-container')
@@ -35,7 +37,7 @@ export class ADP {
     async getJobs(): Promise<Job[]> {
         const foundJobs = this.job;
         const count = await foundJobs.count();
-        const results: Job[] = [];
+        const rawJobs = [] as Array<{id: string; title: string; link: string}>;
         for (let i = 0; i < count; i++) {
             const jobWeb = foundJobs.nth(i);
             const title = await jobWeb.innerText();
@@ -44,20 +46,13 @@ export class ADP {
             const link = this.page.url();
             const id = getJobId(link);
             if (!id) continue;
-            results.push({
-                id,
-                title,
-                link,
-                status: '0',
-                date: new Date().toISOString().split('T')[0],
-                notes: ''
-            });
+            rawJobs.push({id, title, link});
             await this.backButton.click();
             await this.page.waitForLoadState('networkidle');
         }
-        return results;
+        return this.utils.normalizeJobs(rawJobs);
     }
-}    
+}        
 
 function getJobId(url: string): string | null {
     const params = new URL(url).searchParams;

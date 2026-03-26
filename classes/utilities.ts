@@ -11,6 +11,12 @@ export type Job = {
     notes: string;
 };
 
+export type JobInput = {
+    id: string;
+    title: string;
+    link: string;
+};
+
 export class Utilities {
     filePath = path.join(__dirname, '../test-data/jobResults.json');
     
@@ -35,6 +41,20 @@ export class Utilities {
             }
         }
         await writeFile(this.filePath, JSON.stringify(data, null, 2));
+    }
+
+    async normalizeJobs(jobs: JobInput[]): Promise<Job[]> {
+        const today = new Date().toISOString().split('T')[0];
+        return jobs
+            .filter(job => !!job.id && !!job.title && !!job.link)
+            .map(job => ({
+                id: job.id,
+                title: job.title,
+                link: job.link,
+                status: '0',
+                date: today,
+                notes: ''
+            }));
     }
 
     static URLS = Object.fromEntries(
