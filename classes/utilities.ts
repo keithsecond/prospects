@@ -20,6 +20,12 @@ export type JobInput = {
 export class Utilities {
     filePath = path.join(__dirname, '../test-data/jobResults.json');
     
+    /**
+     * Writes new jobs to a shared JSON file (deduped by job.id).
+     *
+     * @param key provider site key used to map org and URL fields.
+     * @param jobs normalized job list to append to existing records.
+     */
     async writeJobs(key: string, jobs: Job[]) {
         const fileData = await readFile(this.filePath, 'utf-8');
         const data = JSON.parse(fileData);
@@ -43,6 +49,12 @@ export class Utilities {
         await writeFile(this.filePath, JSON.stringify(data, null, 2));
     }
 
+    /**
+     * Normalizes raw job data into the standard output shape used by all providers.
+     *
+     * @param jobs raw jobs with minimal required fields (id/title/link).
+     * @returns normalized jobs with status/date/notes default values.
+     */
     async normalizeJobs(jobs: JobInput[]): Promise<Job[]> {
         const today = new Date().toISOString().split('T')[0];
         return jobs
@@ -55,6 +67,22 @@ export class Utilities {
                 date: today,
                 notes: ''
             }));
+    }
+
+    /**
+     * Fetches all configured sites for a specific provider identifier.
+     *
+     * @param provider provider name as appears in test-data/sites.json (e.g. "schoolspring").
+     * @returns filtered array of site definitions.
+     */
+    static getSitesByProvider(provider: string) {
+        return [
+            ...sites.Private,
+            ...sites.Public,
+            ...sites.Universities,
+            ...sites.Sites,
+            ...sites.Recruiters
+        ].filter(site => site.Provider === provider);
     }
 
     static URLS = Object.fromEntries(
@@ -76,14 +104,4 @@ export class Utilities {
             ...sites.Recruiters
         ].map(x => [x.id, x.org])
     );
-
-    static getSitesByProvider(provider: string) {
-        return [
-            ...sites.Private,
-            ...sites.Public,
-            ...sites.Universities,
-            ...sites.Sites,
-            ...sites.Recruiters
-        ].filter(site => site.Provider === provider);
-    }
 }

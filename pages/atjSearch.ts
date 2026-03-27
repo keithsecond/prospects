@@ -8,6 +8,11 @@ export class ATJ {
     container: Locator;
     job: Locator;
 
+    /**
+     * Creates an ATJ page model.
+     * @param page Playwright page instance for browsing and actions.
+     * @param id Optional site ID used to look up the URL from Utilities.URLS.
+     */
     constructor(
         page: Page,
         id?: string,

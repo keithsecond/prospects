@@ -2,6 +2,14 @@ import { test as base } from '@playwright/test';
 import { R001 } from '@pages/localRecruiters/recruiter001/recruiter001Search';
 import { Utilities } from '@classes/utilities';
 
+/**
+ * Test fixtures for R001 (Recruiter001) tests.
+ * @property search - Initialized R001 page model with search already loaded.
+ * @property utils - Utilities instance for job processing.
+ * @property city - CLI option for search location (default: empty string).
+ * @property jobType - CLI option for job function filter (default: empty string).
+ * @property skills - CLI option for keyword search (default: empty string).
+ */
 type Fixtures = {
     search: R001;
     utils: Utilities;

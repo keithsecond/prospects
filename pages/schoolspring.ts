@@ -16,7 +16,13 @@ export class SchoolSpring {
     adminExpand: Locator;
     techCheckbox: Locator;
     searchButton: Locator;
+    noAdmin: boolean;
     
+    /**
+     * Creates a SchoolSpring page model.
+     * @param page Playwright page instance for browsing and actions.
+     * @param id Optional site ID used to look up the URL from Utilities.URLS.
+     */
     constructor(
         page: Page,
         id?: string,
@@ -25,6 +31,7 @@ export class SchoolSpring {
         this.page = page;
         this.utils = new Utilities();
         this.id = id || '';
+        this.noAdmin = false;
         this.closeButton = page.getByRole('button', { name: 'Close'});
         this.moreButton = page.getByRole('button', { name: 'More Jobs' });
         this.container = page.locator('.job-list-panel');
@@ -38,17 +45,22 @@ export class SchoolSpring {
         this.searchButton = page.getByRole('button', { name: 'Search' });
     }
 
+    /**
+     * Loads the SchoolSpring site, applies the admin and technology filters,
+     * clicks Search, and then expands the "More Jobs" list until completed.
+     * If admin or tech filters are unavailable, sets noAdmin flag and returns early.
+     */
     async searchPage() {
         const url = Utilities.URLS[this.id];
         await this.page.goto(url);
         await this.closeButton.click();
         await this.dropdown.click();
         if (await this.adminExpand.count() === 0) {
-            throw new Error('No admin jobs')
+            return this.noAdmin = true;
         };
         await this.adminExpand.click({ timeout: 5000 });
         if (await this.techCheckbox.count() === 0) {
-            throw new Error('No tech jobs')
+            return this.noAdmin = true;
         };
         await this.techCheckbox.check({ timeout: 5000 });    
         await this.searchButton.click();
@@ -60,6 +72,11 @@ export class SchoolSpring {
     }
 
 
+    /**
+     * Gathers all jobs from the currently loaded search results.
+     *
+     * @returns Promise<Job[]> normalized job list with id, title, and link.
+     */
     async getJobs(): Promise<Job[]> {
         const foundJobs = this.job;
         const count = await foundJobs.count();

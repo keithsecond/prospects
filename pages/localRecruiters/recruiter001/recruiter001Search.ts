@@ -18,6 +18,13 @@ export class R001 {
     jobs: Locator;
     resultContainer: Locator;
 
+    /**
+     * Creates an R001 page model.
+     * @param page Playwright page instance for browsing and actions.
+     * @param location Optional city/location to search for jobs.
+     * @param jobType Optional job function/type filter (e.g., "Technology").
+     * @param skills Optional keywords to search for in job listings.
+     */
     constructor(
         page: Page,
         location?: string,
