@@ -8,6 +8,7 @@ export class ADP {
     jobMenu: Locator;
     jobContainer: Locator;
     job: Locator;
+    noResults: Locator;
     backButton: Locator;
 
     constructor(
@@ -18,20 +19,26 @@ export class ADP {
         this.page = page;
         this.utils = new Utilities();
         this.id = id || '';
-        this.jobMenu = page.getByRole('link', { name: 'Current Openings'})
-        this.jobContainer = page.locator('.current-openings-list-container')
-        this.job = page.locator('.break-words')
-        this.backButton = page.getByRole('button', {name: 'Back'})
+        this.jobMenu = page.getByRole('link', { name: 'Current Openings'});
+        this.jobContainer = page.locator('.current-openings-list-container');
+        this.job = page.locator('.break-words');
+        this.noResults = page.getByRole('heading', { name: 'Current Openings (0 of 0)' });
+        this.backButton = page.getByRole('button', {name: 'Back'});
     }
 
     async searchPage() {     
-       const url = Utilities.URLS[this.id];
-       await this.page.goto(url)
+        const url = Utilities.URLS[this.id];
+        await this.page.goto(url);
     }
 
     async search() {
         await this.jobMenu.click();
-        await expect(this.jobContainer).toBeVisible();
+        try {
+            await expect(this.jobContainer).toBeVisible();
+        } catch {
+            console.warn("No job listings");
+            await expect(this.noResults).toBeVisible();
+        }
     }
 
     async getJobs(): Promise<Job[]> {

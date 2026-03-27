@@ -1,4 +1,4 @@
-import { expect, Locator, Page, BrowserContext } from '@playwright/test';
+import { Locator, Page } from '@playwright/test';
 import { Job, Utilities } from '@classes/utilities';
 
 export class ATJ {
@@ -16,13 +16,13 @@ export class ATJ {
         this.page = page;
         this.utils = new Utilities();
         this.id = id || '';
-        this.container = this.page.locator('.list-group-item-heading')
-        this.job = this.container.getByRole('link')
+        this.container = this.page.locator('.list-group-item-heading');
+        this.job = this.container.getByRole('link');
     }
 
     async searchPage() {
-       const url = Utilities.URLS[this.id];
-       await this.page.goto(url)
+        const url = Utilities.URLS[this.id];
+        await this.page.goto(url);
     }
 
     async getJobs(): Promise<Job[]> {

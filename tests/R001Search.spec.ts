@@ -8,7 +8,7 @@ test.describe('r001 Tests', () => {
             await search.search();
             const jobs = await search.getJobs();
             await utils.writeJobs('r001', jobs);
-        })
+        });
         return;
     };
     
@@ -24,6 +24,6 @@ test.describe('r001 Tests', () => {
             await search.search();
             const jobs = await search.getJobs();
             await utils.writeJobs('r001', jobs);
-        })
+        });
     });
 });

@@ -13,7 +13,7 @@ test.describe('ADP Workboards', () => {
             await adp.search();
             const jobs = await adp.getJobs();
             if (site.id !== undefined)
-            await utils.writeJobs(site.id, jobs);
+                await utils.writeJobs(site.id, jobs);
         });
     });
 });

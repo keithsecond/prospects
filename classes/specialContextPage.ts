@@ -1,14 +1,15 @@
-import { Page, Browser } from '@playwright/test';
+import { Page, Browser, BrowserContext } from '@playwright/test';
 import { chromium } from "playwright";
 
 export class SpecialContextPage {
     page: Page;
     browser: Browser;
-    context: any;
+    context: BrowserContext;
  
     constructor(browser: Browser, page: Page) {
         this.browser = browser;
         this.page = page;
+        this.context = context;
     }
 
     async noNavigator() {

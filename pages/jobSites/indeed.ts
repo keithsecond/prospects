@@ -7,3 +7,5 @@ export class IndeedPage extends SpecialContextPage {
         super(page.browser, page.page);
     }
 };
+
+export {test , expect };

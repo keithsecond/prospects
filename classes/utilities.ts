@@ -75,7 +75,7 @@ export class Utilities {
             ...sites.Sites,
             ...sites.Recruiters
         ].map(x => [x.id, x.org])
-    )
+    );
 
     static getSitesByProvider(provider: string) {
         return [
