@@ -43,8 +43,8 @@ export class SchoolSpring {
         await this.page.goto(url);
         await this.closeButton.click();
         await this.dropdown.click();
-        await this.adminExpand.click();
-        await this.techCheckbox.check();    
+        await this.adminExpand.click({ timeout: 5000 });
+        await this.techCheckbox.check({ timeout: 5000 });    
         await this.searchButton.click();
         await this.page.waitForTimeout(500);
         while (await this.moreButton.isVisible()) {
@@ -69,7 +69,6 @@ export class SchoolSpring {
             if (!id) continue;
             rawJobs.push({id, title, link});
         }
-        console.log(rawJobs);
         return this.utils.normalizeJobs(rawJobs);
     }
 }
