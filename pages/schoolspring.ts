@@ -12,6 +12,10 @@ export class SchoolSpring {
     titleCard: Locator;
     jobIdContainer: Locator;
     jobId: Locator;
+    dropdown: Locator;
+    adminExpand: Locator;
+    techCheckbox: Locator;
+    searchButton: Locator;
     
     constructor(
         page: Page,
@@ -28,23 +32,34 @@ export class SchoolSpring {
         this.titleCard = page.locator('.card-title.h5');
         this.jobIdContainer = page.locator('#jobDetails-desktop');
         this.jobId = this.jobIdContainer.locator('#jobId-value');
+        this.dropdown = page.locator('.nestedmultiselect-container').first();
+        this.adminExpand = page.getByRole('button', {name: 'expand Administration' });
+        this.techCheckbox = page.getByRole('checkbox', { name: 'Technology'})
+        this.searchButton = page.getByRole('button', { name: 'Search' });
     }
 
     async searchPage() {
         const url = Utilities.URLS[this.id];
         await this.page.goto(url);
         await this.closeButton.click();
+        await this.dropdown.click();
+        await this.adminExpand.click();
+        await this.techCheckbox.check();    
+        await this.searchButton.click();
+        await this.page.waitForTimeout(500);
         while (await this.moreButton.isVisible()) {
             await this.moreButton.click();
             await this.page.waitForTimeout(500); 
         }
     }
 
+
     async getJobs(): Promise<Job[]> {
         const foundJobs = this.job;
         const count = await foundJobs.count();
         const rawJobs = [] as Array<{id: string; title: string; link: string}>;
         for (let i = 0; i < count; i++) {
+            await this.dropdown.click();
             const jobWeb = foundJobs.nth(i);
             await jobWeb.click();
             const title = await this.titleCard.nth(i).innerText();
@@ -54,6 +69,7 @@ export class SchoolSpring {
             if (!id) continue;
             rawJobs.push({id, title, link});
         }
+        console.log(rawJobs);
         return this.utils.normalizeJobs(rawJobs);
     }
 }
