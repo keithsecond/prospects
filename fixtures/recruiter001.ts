@@ -21,7 +21,7 @@ export const test = base.extend<Fixtures>({
         await use(r001);
     },
 
-    utils: async (_, use) => {
+    utils: async ({}, use) => {
         const utilities = new Utilities();
         await use(utilities);
     },

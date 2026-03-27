@@ -43,7 +43,13 @@ export class SchoolSpring {
         await this.page.goto(url);
         await this.closeButton.click();
         await this.dropdown.click();
+        if (await this.adminExpand.count() === 0) {
+            throw new Error('No admin jobs')
+        };
         await this.adminExpand.click({ timeout: 5000 });
+        if (await this.techCheckbox.count() === 0) {
+            throw new Error('No tech jobs')
+        };
         await this.techCheckbox.check({ timeout: 5000 });    
         await this.searchButton.click();
         await this.page.waitForTimeout(500);
