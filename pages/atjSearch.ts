@@ -28,7 +28,6 @@ export class ATJ {
     async getJobs(): Promise<Job[]> {
         const foundJobs = this.job;
         const count = await foundJobs.count();
-        console.log(count, 'count');
         const rawJobs = [] as Array<{id: string; title: string; link: string}>;
         for (let i = 0; i < count; i++) {
             const jobWeb = foundJobs.nth(i);
