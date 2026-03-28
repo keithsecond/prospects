@@ -58,11 +58,11 @@ export class SchoolSpring {
         if (await this.adminExpand.count() === 0) {
             return this.noAdmin = true;
         };
-        await this.adminExpand.click({ timeout: 5000 });
+        await this.adminExpand.click();
         if (await this.techCheckbox.count() === 0) {
             return this.noAdmin = true;
         };
-        await this.techCheckbox.check({ timeout: 5000 });    
+        await this.techCheckbox.check();    
         await this.searchButton.click();
         await this.page.waitForTimeout(500);
         while (await this.moreButton.isVisible()) {
@@ -70,7 +70,6 @@ export class SchoolSpring {
             await this.page.waitForTimeout(500); 
         }
     }
-
 
     /**
      * Gathers all jobs from the currently loaded search results.

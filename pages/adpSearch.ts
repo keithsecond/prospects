@@ -19,7 +19,6 @@ export class ADP {
     constructor(
         page: Page,
         id?: string,
-
     ) {
         this.page = page;
         this.utils = new Utilities();

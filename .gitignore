@@ -1,3 +1,6 @@
+.prettierignore
+.prettierrc
+
 
 # Playwright
 /node_modules/
