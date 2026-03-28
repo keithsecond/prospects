@@ -29,10 +29,9 @@ export const test = base.extend<Fixtures>({
         await use(r001);
     },
 
+    // eslint-disable-next-line no-empty-pattern
     utils: async ({}, use) => {
         const utilities = new Utilities();
         await use(utilities);
     },
 });
-
-

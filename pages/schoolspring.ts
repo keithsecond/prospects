@@ -17,22 +17,18 @@ export class SchoolSpring {
     techCheckbox: Locator;
     searchButton: Locator;
     noAdmin: boolean;
-    
+
     /**
      * Creates a SchoolSpring page model.
      * @param page Playwright page instance for browsing and actions.
      * @param id Optional site ID used to look up the URL from Utilities.URLS.
      */
-    constructor(
-        page: Page,
-        id?: string,
-
-    ) {
-        this.page = page;
+    constructor(page: Page, id?: string) {
+        this.page = page; 
         this.utils = new Utilities();
         this.id = id || '';
         this.noAdmin = false;
-        this.closeButton = page.getByRole('button', { name: 'Close'});
+        this.closeButton = page.getByRole('button', { name: 'Close' });
         this.moreButton = page.getByRole('button', { name: 'More Jobs' });
         this.container = page.locator('.job-list-panel');
         this.job = this.container.locator('#joblist-div');
@@ -40,8 +36,10 @@ export class SchoolSpring {
         this.jobIdContainer = page.locator('#jobDetails-desktop');
         this.jobId = this.jobIdContainer.locator('#jobId-value');
         this.dropdown = page.locator('.nestedmultiselect-container').first();
-        this.adminExpand = page.getByRole('button', {name: 'expand Administration' });
-        this.techCheckbox = page.getByRole('checkbox', { name: 'Technology'})
+        this.adminExpand = page.getByRole('button', {
+            name: 'expand Administration',
+        });
+        this.techCheckbox = page.getByRole('checkbox', { name: 'Technology' });
         this.searchButton = page.getByRole('button', { name: 'Search' });
     }
 
@@ -56,18 +54,18 @@ export class SchoolSpring {
         await this.closeButton.click();
         await this.dropdown.click();
         if (await this.adminExpand.count() === 0) {
-            return this.noAdmin = true;
-        };
+            return (this.noAdmin = true);
+        }
         await this.adminExpand.click();
         if (await this.techCheckbox.count() === 0) {
-            return this.noAdmin = true;
-        };
-        await this.techCheckbox.check();    
+            return (this.noAdmin = true);
+        }
+        await this.techCheckbox.check();
         await this.searchButton.click();
         await this.page.waitForTimeout(500);
         while (await this.moreButton.isVisible()) {
             await this.moreButton.click();
-            await this.page.waitForTimeout(500); 
+            await this.page.waitForTimeout(500);
         }
     }
 
@@ -79,7 +77,11 @@ export class SchoolSpring {
     async getJobs(): Promise<Job[]> {
         const foundJobs = this.job;
         const count = await foundJobs.count();
-        const rawJobs = [] as Array<{id: string; title: string; link: string}>;
+        const rawJobs = [] as Array<{
+            id: string;
+            title: string;
+            link: string;
+        }>;
         for (let i = 0; i < count; i++) {
             await this.dropdown.click();
             const jobWeb = foundJobs.nth(i);
@@ -89,7 +91,7 @@ export class SchoolSpring {
             const url = this.page.url();
             const link = `${url}?jobid=${id}`;
             if (!id) continue;
-            rawJobs.push({id, title, link});
+            rawJobs.push({ id, title, link });
         }
         return this.utils.normalizeJobs(rawJobs);
     }

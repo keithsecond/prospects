@@ -13,10 +13,7 @@ export class ATJ {
      * @param page Playwright page instance for browsing and actions.
      * @param id Optional site ID used to look up the URL from Utilities.URLS.
      */
-    constructor(
-        page: Page,
-        id?: string,
-    ) {
+    constructor(page: Page, id?: string) {
         this.page = page;
         this.utils = new Utilities();
         this.id = id || '';
@@ -32,20 +29,20 @@ export class ATJ {
     async getJobs(): Promise<Job[]> {
         const foundJobs = this.job;
         const count = await foundJobs.count();
-        const rawJobs = [] as Array<{id: string; title: string; link: string}>;
+        const rawJobs = [] as Array<{
+            id: string;
+            title: string;
+            link: string;
+        }>;
         for (let i = 0; i < count; i++) {
             const jobWeb = foundJobs.nth(i);
             const title = await jobWeb.innerText();
             const link = await jobWeb.getAttribute('href');
             if (!link) continue;
-            const id = (link.match(/apply\/([^/]+)/)?.[1]) || '';
+            const id = link.match(/apply\/([^/]+)/)?.[1] || '';
             if (!id) continue;
-            rawJobs.push({id, title, link});
+            rawJobs.push({ id, title, link });
         }
         return this.utils.normalizeJobs(rawJobs);
     }
-
 }
-
-
-

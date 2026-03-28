@@ -16,21 +16,20 @@ export class ADP {
      * @param page Playwright page instance for browsing and actions.
      * @param id Optional site ID used to look up the URL from Utilities.URLS.
      */
-    constructor(
-        page: Page,
-        id?: string,
-    ) {
+    constructor(page: Page, id?: string) {
         this.page = page;
         this.utils = new Utilities();
         this.id = id || '';
-        this.jobMenu = page.getByRole('link', { name: 'Current Openings'});
+        this.jobMenu = page.getByRole('link', { name: 'Current Openings' });
         this.jobContainer = page.locator('.current-openings-list-container');
         this.job = page.locator('.break-words');
-        this.noResults = page.getByRole('heading', { name: 'Current Openings (0 of 0)' });
-        this.backButton = page.getByRole('button', {name: 'Back'});
+        this.noResults = page.getByRole('heading', { 
+            name: 'Current Openings (0 of 0)' 
+        });
+        this.backButton = page.getByRole('button', { name: 'Back' });
     }
 
-    async searchPage() {     
+    async searchPage() {
         const url = Utilities.URLS[this.id];
         await this.page.goto(url);
     }
@@ -40,7 +39,7 @@ export class ADP {
         try {
             await expect(this.jobContainer).toBeVisible();
         } catch {
-            console.warn("No job listings");
+            console.warn('No job listings');
             await expect(this.noResults).toBeVisible();
         }
     }
@@ -48,7 +47,11 @@ export class ADP {
     async getJobs(): Promise<Job[]> {
         const foundJobs = this.job;
         const count = await foundJobs.count();
-        const rawJobs = [] as Array<{id: string; title: string; link: string}>;
+        const rawJobs = [] as Array<{
+            id: string;
+            title: string;
+            link: string;
+        }>;
         for (let i = 0; i < count; i++) {
             const jobWeb = foundJobs.nth(i);
             const title = await jobWeb.innerText();
@@ -57,13 +60,13 @@ export class ADP {
             const link = this.page.url();
             const id = getJobId(link);
             if (!id) continue;
-            rawJobs.push({id, title, link});
+            rawJobs.push({ id, title, link });
             await this.backButton.click();
             await this.page.waitForLoadState('networkidle');
         }
         return this.utils.normalizeJobs(rawJobs);
     }
-}        
+}
 
 function getJobId(url: string): string | null {
     const params = new URL(url).searchParams;

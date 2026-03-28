@@ -1,35 +1,35 @@
 {
-  "fakesite0": {
-    "Site": "Fakesite recruiting",
-    "URL": "https://jobs.fakesite0.com/jb/",
-    "jobs": [
-      {
-        "id": "13717532",
-        "title": "API Automation Test Engineer",
-        "status": "0",
-        "date": "2026-01-01",
-        "notes": "might be overqualified"
-      }
-    ]
-  },
-  "fakesite1": {
-    "Site": "Fake Site",
-    "URL": "https://fakesite.com",
-    "jobs": [
-      {
-        "id": "333",
-        "title": "SDET + Devops",
-        "status": "1",
-        "date": "2026-01-01",
-        "notes": "interesting growth project"
-      }
-    ]
-  },
-  "Status Definitions": { 
-    "0": "new job",
-    "1": "applied",
-    "2": "recieved reply",
-    "3": "interviewing",
-    "4": "declined"
-  }
+    "fakesite0": {
+        "Site": "Fakesite recruiting",
+        "URL": "https://jobs.fakesite0.com/jb/",
+        "jobs": [
+            {
+                "id": "13717532",
+                "title": "API Automation Test Engineer",
+                "status": "0",
+                "date": "2026-01-01",
+                "notes": "might be overqualified"
+            }
+        ]
+    },
+    "fakesite1": {
+        "Site": "Fake Site",
+        "URL": "https://fakesite.com",
+        "jobs": [
+            {
+                "id": "333",
+                "title": "SDET + Devops",
+                "status": "1",
+                "date": "2026-01-01",
+                "notes": "interesting growth project"
+            }
+        ]
+    },
+    "Status Definitions": {
+        "0": "new job",
+        "1": "applied",
+        "2": "recieved reply",
+        "3": "interviewing",
+        "4": "declined"
+    }
 }

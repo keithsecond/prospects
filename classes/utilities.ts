@@ -19,7 +19,7 @@ export type JobInput = {
 
 export class Utilities {
     filePath = path.join(__dirname, '../test-data/jobResults.json');
-    
+
     /**
      * Writes new jobs to a shared JSON file (deduped by job.id).
      *
@@ -30,12 +30,12 @@ export class Utilities {
         const fileData = await readFile(this.filePath, 'utf-8');
         const data = JSON.parse(fileData);
         const org = Utilities.ORGS[key] || key;
-        const url = Utilities.URLS[key] || "";
+        const url = Utilities.URLS[key] || '';
         if (!data[org]) {
             data[org] = {
-                Site: "",
+                Site: '',
                 URL: url,
-                jobs: []
+                jobs: [],
             };
         }
         const existingJobIds = new Set(
@@ -65,7 +65,7 @@ export class Utilities {
                 link: job.link,
                 status: '0',
                 date: today,
-                notes: ''
+                notes: '',
             }));
     }
 
@@ -81,7 +81,7 @@ export class Utilities {
             ...sites.Public,
             ...sites.Universities,
             ...sites.Sites,
-            ...sites.Recruiters
+            ...sites.Recruiters,
         ].filter(site => site.Provider === provider);
     }
 
@@ -91,17 +91,17 @@ export class Utilities {
             ...sites.Public,
             ...sites.Universities,
             ...sites.Sites,
-            ...sites.Recruiters
+            ...sites.Recruiters,
         ].map(x => [x.id, x.URL])
     );
-    
+
     static ORGS: Record<string, string> = Object.fromEntries(
         [
             ...sites.Private,
             ...sites.Public,
             ...sites.Universities,
             ...sites.Sites,
-            ...sites.Recruiters
+            ...sites.Recruiters,
         ].map(x => [x.id, x.org])
     );
 }

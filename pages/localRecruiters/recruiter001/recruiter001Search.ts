@@ -1,7 +1,6 @@
 import { expect, Locator, Page } from '@playwright/test';
 import { Job, Utilities } from '@classes/utilities';
 
-
 export class R001 {
     page: Page;
     utils: Utilities;
@@ -26,10 +25,10 @@ export class R001 {
      * @param skills Optional keywords to search for in job listings.
      */
     constructor(
-        page: Page,
+        page: Page, 
         location?: string,
         jobType?: string,
-        skills?: string,
+        skills?: string
     ) {
         this.page = page;
         this.utils = new Utilities();
@@ -40,9 +39,13 @@ export class R001 {
         this.locationText = page.getByRole('textbox', { name: 'Location' });
         this.locationComplete = page.getByRole('option', { name: location });
         this.jobBox = page.getByRole('combobox', { name: 'Job Function' });
-        this.jobOption = page.getByRole('listbox').locator('.category_listbox.listbox');
+        this.jobOption = page
+            .getByRole('listbox')
+            .locator('.category_listbox.listbox');
         this.jobField = page.getByRole('option', { name: jobType });
-        this.submitButton = page.getByRole('button', { name: ' Begin Searching' });
+        this.submitButton = page.getByRole('button', {
+            name: ' Begin Searching',
+        });
         this.jobs = page.locator('.job-post-href:not(.more-arrow)');
         this.resultContainer = page.locator('.JBSearchTemplate').first();
     }
@@ -58,7 +61,9 @@ export class R001 {
         await this.locationComplete.click();
         await this.jobBox.click();
         await expect(this.jobBox).toHaveAttribute('aria-expanded', 'true');
-        await expect(this.jobOption.locator('.category_listbox.listbox.open')).toBeTruthy();
+        await expect(
+            this.jobOption.locator('.category_listbox.listbox.open')
+        ).toBeTruthy();
         await this.jobField.click();
         await this.submitButton.click();
     }
@@ -67,7 +72,11 @@ export class R001 {
         await this.resultContainer.all();
         const foundJobs = this.jobs;
         const count = await foundJobs.count();
-        const rawJobs = [] as Array<{id: string; title: string; link: string}>;
+        const rawJobs = [] as Array<{
+            id: string;
+            title: string;
+            link: string;
+        }>;
         for (let i = 0; i < count; i++) {
             const jobWeb = foundJobs.nth(i);
             const title = await jobWeb.textContent();
@@ -75,7 +84,7 @@ export class R001 {
             if (!link || link === '#') continue;
             const id = link.split('/').pop() || '';
             if (!id || !title) continue;
-            rawJobs.push({id, title, link});
+            rawJobs.push({ id, title, link });
         }
         return this.utils.normalizeJobs(rawJobs);
     }

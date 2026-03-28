@@ -3,7 +3,7 @@ import { ATJ } from '@pages/atjSearch';
 import { Utilities } from '@classes/utilities';
 
 test.describe('ApplyToJobs Workboards', () => {
-    const atjSites = Utilities.getSitesByProvider("ATJ");
+    const atjSites = Utilities.getSitesByProvider('ATJ');
     const utils = new Utilities();
 
     atjSites.forEach(site => {
@@ -11,8 +11,7 @@ test.describe('ApplyToJobs Workboards', () => {
             const atj = new ATJ(page, site.id);
             await atj.searchPage();
             const jobs = await atj.getJobs();
-            if (site.id !== undefined)
-                await utils.writeJobs(site.id, jobs);
+            if (site.id !== undefined) await utils.writeJobs(site.id, jobs);
         });
     });
 });
