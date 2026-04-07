@@ -11,7 +11,7 @@ test.describe('ApplyToJobs Workboards', () => {
             const atj = new ATJ(page, site.id);
             await atj.searchPage();
             const jobs = await atj.getJobs();
-            if (site.id !== undefined) await utils.writeJobs(site.id, jobs);
+            if (site.id !== undefined) await utils.batchAppendJobs(site.id, jobs);
         });
     });
 });

@@ -10,7 +10,6 @@
     "resolveJsonModule": true,
     "outDir": "./dist",
     "rootDir": ".",
-    "baseUrl": ".",
     "paths": {
       "@pages/*": ["./pages/*"],
       "@fixtures/*": ["./fixtures/*"],

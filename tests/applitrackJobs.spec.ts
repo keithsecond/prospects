@@ -12,7 +12,7 @@ test.describe('Applitrack Workboards', () => {
             await applitrack.searchPage();
             testInfo.skip(applitrack.noAdmin, 'No tech jobs');
             const jobs = await applitrack.getJobs();
-            if (site.id !== undefined) await utils.writeJobs(site.id, jobs);
+            if (site.id !== undefined) await utils.batchAppendJobs(site.id, jobs);
         });
     });
 });

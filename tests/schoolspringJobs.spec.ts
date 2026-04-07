@@ -12,7 +12,7 @@ test.describe('SchoolSpring Workboards', () => {
             await schoolspring.searchPage();
             testInfo.skip(schoolspring.noAdmin, 'No tech jobs');
             const jobs = await schoolspring.getJobs();
-            if (site.id !== undefined) await utils.writeJobs(site.id, jobs);
+            if (site.id !== undefined) await utils.batchAppendJobs(site.id, jobs);
         });
     });
 });

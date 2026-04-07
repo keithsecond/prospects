@@ -39,7 +39,6 @@ export class ADP {
         try {
             await expect(this.jobContainer).toBeVisible();
         } catch {
-            console.warn('No job listings');
             await expect(this.noResults).toBeVisible();
         }
     }

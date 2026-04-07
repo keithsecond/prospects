@@ -11,7 +11,7 @@ test.describe('r001 Tests', () => {
         test(`search ${searchQuery}`, async ({ search, utils }) => {
             await search.search();
             const jobs = await search.getJobs();
-            await utils.writeJobs('r001', jobs);
+            await utils.batchAppendJobs('r001', jobs);
         });
         return;
     }
@@ -31,7 +31,7 @@ test.describe('r001 Tests', () => {
         test(`search ${term}`, async ({ search, utils }) => {
             await search.search();
             const jobs = await search.getJobs();
-            await utils.writeJobs('r001', jobs);
+            await utils.batchAppendJobs('r001', jobs);
         });
     });
 });
