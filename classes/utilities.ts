@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir } from 'fs/promises';
+import { readFile, writeFile, mkdir, readdir, unlink, rmdir } from 'fs/promises';
 import path from 'path';
 import sites from '../test-data/sites.json';
 
@@ -130,14 +130,14 @@ export class Utilities {
         
         // Clean up batch directory
         try {
-            for (const file of await Utilities.readdirSync(this.batchDir)) {
-                await import('fs/promises')
-                    .then(fs => fs.unlink(path.join(this.batchDir, file)));
+            const files = await readdir(this.batchDir);
+            for (const file of files) {
+                await unlink(path.join(this.batchDir, file));
             }
-            await import('fs/promises')
-                .then(fs => fs.rmdir(this.batchDir));
-        } catch {
-            // Ignore cleanup errors
+            await rmdir(this.batchDir);
+        } catch (err) {
+            // Log error for debugging
+            console.error('Failed to clean up batch directory:', err);
         }
     }
 
