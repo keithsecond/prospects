@@ -23,15 +23,17 @@ test.describe('r001 Tests', () => {
     const jobTerms = [jobDesktop, jobSupport, jobSDET, jobQA];
 
     jobTerms.forEach(term => {
-        test.use({
-            city: 'Houston, TX',
-            jobType: 'Information Technology',
-            skills: term,
-        });
-        test(`search ${term}`, async ({ search, utils }) => {
-            await search.search();
-            const jobs = await search.getJobs();
-            await utils.batchAppendJobs('r001', jobs);
+        test.describe(`search for ${term}`, () => {
+            test.use({
+                city: 'Houston, TX',
+                jobType: 'Information Technology',
+                skills: term,
+            });
+            test(`search ${term}`, async ({ search, utils }) => {
+                await search.search();
+                const jobs = await search.getJobs();
+                await utils.batchAppendJobs('r001', jobs);
+            });
         });
     });
 });
