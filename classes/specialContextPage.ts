@@ -4,26 +4,35 @@ import { chromium } from 'playwright';
 export class SpecialContextPage {
     page: Page;
     browser: Browser;
-    context: BrowserContext;
+    context?: BrowserContext;
 
-    constructor(browser: Browser, page: Page) {
+    constructor(
+        browser: Browser,
+        page: Page | null
+    ) {
         this.browser = browser;
-        this.page = page;
-        this.context = context;
+        this.page = page as Page;
     }
 
     async noNavigator() {
-        this.context = await this.browser.newContext({});
-        this.page = await this.context.newPage();
+        const context = await this.browser.newContext({});
+        this.page = await context.newPage();
         await this.page.addInitScript(
             'delete Object.getPrototypeOf(navigator).webdriver'
         );
+        this.context = context;
     }
 
     async cdpBrowser() {
+        if (this.context) {
+            await this.context.close();
+        }
         this.browser = await chromium.connectOverCDP('http://localhost:9222');
-        this.context = await this.browser.newContext();
-        this.page = await this.context.newPage();
-        console.log(this.browser.contexts().length);
+
+        // Create a fresh context for this test
+        // Other parallel tests will have their own contexts - they're isolated
+        const context = await this.browser.newContext();
+        this.page = await context.newPage();
+        this.context = context;
     }
 }

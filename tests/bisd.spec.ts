@@ -1,0 +1,18 @@
+import { test } from '@fixtures/bisd-auth';
+import { Utilities } from '@classes/utilities';
+
+const utils = new Utilities();
+const searchTerms = ['IT', 'IT Software', 'ITIL', 'IT Support', 'IT Infrastructure', 'Help Desk', 'Help Desk Analyst', 'Service Desk'];
+
+test.describe('BISD', () => {
+    test.describe.configure({ mode: 'serial' });
+    for (const searchTerm of searchTerms) {
+        test(`BISD ${searchTerm}`, async ({ bisd }) => {
+            test.slow();
+            await bisd.search(searchTerm);
+            const jobs = await bisd.getJobs(searchTerm);
+            console.log(`BISD search for ${searchTerm} returned ${jobs.length} jobs`);
+            await utils.batchAppendJobs('bisd', jobs);
+        });
+    }
+});

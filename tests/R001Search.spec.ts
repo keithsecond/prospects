@@ -22,7 +22,7 @@ test.describe('r001 Tests', () => {
     const jobSDET = 'SDET';
     const jobTerms = [jobDesktop, jobSupport, jobSDET, jobQA];
 
-    jobTerms.forEach(term => {
+    for (const term of jobTerms) {
         test.describe(`search for ${term}`, () => {
             test.use({
                 city: 'Houston, TX',
@@ -35,5 +35,5 @@ test.describe('r001 Tests', () => {
                 await utils.batchAppendJobs('r001', jobs);
             });
         });
-    });
+    }
 });

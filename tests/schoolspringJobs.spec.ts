@@ -6,13 +6,15 @@ test.describe('SchoolSpring Workboards', () => {
     const schoolspringSites = Utilities.getSitesByProvider('schoolspring');
     const utils = new Utilities();
 
-    schoolspringSites.forEach(site => {
+    for (const site of schoolspringSites) {
         test(`SchoolSpring ${site.org}`, async ({ page }, testInfo) => {
             const schoolspring = new SchoolSpring(page, site.id);
             await schoolspring.searchPage();
             testInfo.skip(schoolspring.noAdmin, 'No tech jobs');
             const jobs = await schoolspring.getJobs();
-            if (site.id !== undefined) await utils.batchAppendJobs(site.id, jobs);
+            if (site.id !== undefined) {
+                await utils.batchAppendJobs(site.id, jobs);
+            }
         });
-    });
+    }
 });
