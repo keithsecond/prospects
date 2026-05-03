@@ -1,10 +1,13 @@
 import { Page, Browser, BrowserContext } from '@playwright/test';
 import { chromium } from 'playwright';
+import { CDPValidator } from './cdpValidator';
+
 
 export class SpecialContextPage {
     page: Page;
     browser: Browser;
     context?: BrowserContext;
+    noCdp: boolean;
 
     constructor(
         browser: Browser,
@@ -12,6 +15,7 @@ export class SpecialContextPage {
     ) {
         this.browser = browser;
         this.page = page as Page;
+        this.noCdp = false;
     }
 
     async noNavigator() {
@@ -24,6 +28,11 @@ export class SpecialContextPage {
     }
 
     async cdpBrowser() {
+        // Check if CDP is available
+        this.noCdp = await CDPValidator.isUnavailable();
+        if (this.noCdp) {
+            return;
+        }
         if (this.context) {
             await this.context.close();
         }

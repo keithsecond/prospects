@@ -22,7 +22,6 @@ export const test = base.extend<BISDFixtures>({
     bisd: async ({ browser }, use) => {
         try {
             if (cachedBISD && isLoginComplete) {
-                console.log('Reusing cached authenticated BISD session');
                 await use(cachedBISD);
                 return;
             }
@@ -36,9 +35,7 @@ export const test = base.extend<BISDFixtures>({
             const email = process.env.BISD_EMAIL;
             const password = process.env.BISD_PASSWORD;
             if (email && password) {
-                console.log('Attempting login...');
                 await cachedBISD.login(email, password);
-                console.log('BISD login successful');
                 isLoginComplete = true;
             } else {
                 console.warn('BISD_EMAIL and BISD_PASSWORD not set in .auth/.env - skipping login');
