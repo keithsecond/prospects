@@ -30,16 +30,6 @@ export class CDPValidator {
         return false;
     }
 
-    private static isPortOpen(): boolean {
-        try {
-            const output = execSync(`nc -zv ${this.CDP_HOST} ${this.CDP_PORT} ; echo $?`).toString();
-            return output.trim() === '0';
-        } catch (error) {
-            console.error(`Port check failed:`, error);
-            return false;
-        }
-    }
-
     private static launchChromeDebugger(): void {
         try {
             execSync(
@@ -49,6 +39,16 @@ export class CDPValidator {
             console.error('Failed to launch Chrome debugger:', error);
         }
     }
+
+    private static isPortOpen(): boolean {
+        try {
+            const output = execSync(`nc -zv ${this.CDP_HOST} ${this.CDP_PORT} ; echo $?`).toString();
+            return output.trim() === '0';
+        } catch (error) {
+            console.error(`Port check failed:`, error);
+            return false;
+        }    
+    }    
 
     private static async isJsonEndpointValid(): Promise<boolean> {
         try {

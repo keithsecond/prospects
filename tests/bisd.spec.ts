@@ -10,12 +10,12 @@ test.describe('BISD', () => {
     test.describe.configure({ mode: 'serial' });
     let noCdp: boolean = false;
 
-    test.beforeAll( "CDP", async ({}) => {
+    test.beforeAll( "CDP", async ({}, testInfo) => {
         noCdp = await CDPValidator.isUnavailable();
-        expect(noCdp).toBe(false), 'No CDP connection available';
+        testInfo.skip(noCdp, 'No CDP connection available');
     });
     for (const searchTerm of searchTerms) {
-        test(`BISD ${searchTerm}`, async ({ bisd }) => {
+        test(`BISD ${searchTerm}`, async ({ bisd }, testInfo) => {
             test.slow();
             await bisd.search(searchTerm);
             const jobs = await bisd.getJobs(searchTerm);

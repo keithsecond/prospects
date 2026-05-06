@@ -42,7 +42,7 @@ export const test = base.extend<BISDFixtures>({
             }
             await use(cachedBISD);
         } catch (error) {
-            console.error('BISD fixture setup failed:', error);
+            console.error('BISD fixture setup failed:');
             throw error;
         }
     },
