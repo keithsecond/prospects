@@ -15,6 +15,8 @@ export class SchoolSpring {
     dropdown: Locator;
     adminExpand: Locator;
     techCheckbox: Locator;
+    supportStaffExpand: Locator;
+    computerSupportCheckbox: Locator;
     searchButton: Locator;
     noAdmin: boolean;
 
@@ -40,6 +42,10 @@ export class SchoolSpring {
             name: 'expand Administration',
         });
         this.techCheckbox = page.getByRole('checkbox', { name: 'Technology' });
+        this.supportStaffExpand = page.getByRole('button', {
+             name: 'expand Support Staff'
+            });
+        this.computerSupportCheckbox = page.getByRole('checkbox', { name: 'Computer Support' });
         this.searchButton = page.getByRole('button', { name: 'Search' });
     }
 
@@ -53,14 +59,28 @@ export class SchoolSpring {
         await this.page.goto(url);
         await this.closeButton.click();
         await this.dropdown.click();
-        if (await this.adminExpand.count() === 0) {
+        const adminExists = await this.adminExpand.count() > 0;
+        const computerExists = await this.supportStaffExpand.count() > 0;
+        if (!adminExists && !computerExists) {
             return (this.noAdmin = true);
         }
-        await this.adminExpand.click();
-        if (await this.techCheckbox.count() === 0) {
+        if (await this.adminExpand.isVisible()) {
+            await this.adminExpand.click();
+        }
+        if (await this.supportStaffExpand.isVisible()) {
+            await this.supportStaffExpand.click();
+        }
+        const techExists = await this.techCheckbox.count() > 0;
+        const supportExists = await this.computerSupportCheckbox.count() > 0;
+        if (!techExists && !supportExists) {
             return (this.noAdmin = true);
         }
-        await this.techCheckbox.check();
+        if (techExists) {
+            await this.techCheckbox.check()
+        }
+        if (supportExists) {
+            await this.computerSupportCheckbox.check();
+        }
         await this.searchButton.click();
         await this.page.waitForTimeout(500);
         while (await this.moreButton.isVisible()) {
