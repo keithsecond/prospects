@@ -59,7 +59,9 @@ export class SchoolSpring {
         await this.page.goto(url);
         await this.closeButton.click();
         await this.dropdown.click();
-        if (await this.adminExpand.count() === 0) {
+        const adminExists = await this.adminExpand.count() > 0;
+        const computerExists = await this.supportStaffExpand.count() > 0;
+        if (!adminExists && !computerExists) {
             return (this.noAdmin = true);
         }
         if (await this.adminExpand.isVisible()) {
@@ -77,7 +79,7 @@ export class SchoolSpring {
             await this.techCheckbox.check()
         }
         if (supportExists) {
-            await this.computerSupportCheckbox.check();        
+            await this.computerSupportCheckbox.check();
         }
         await this.searchButton.click();
         await this.page.waitForTimeout(500);
