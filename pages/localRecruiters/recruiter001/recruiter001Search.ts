@@ -4,7 +4,6 @@ import { Job, Utilities } from '@classes/utilities';
 export class R001 {
     page: Page;
     utils: Utilities;
-    skills: string;
     city: string;
     jobType: string;
     skillbox: Locator;
@@ -17,32 +16,21 @@ export class R001 {
     jobs: Locator;
     resultContainer: Locator;
 
-    /**
-     * Creates an R001 page model.
-     * @param page Playwright page instance for browsing and actions.
-     * @param location Optional city/location to search for jobs.
-     * @param jobType Optional job function/type filter (e.g., "Technology").
-     * @param skills Optional keywords to search for in job listings.
-     */
     constructor(
         page: Page, 
-        location?: string,
-        jobType?: string,
-        skills?: string
     ) {
         this.page = page;
         this.utils = new Utilities();
-        this.city = location || '';
-        this.jobType = jobType || '';
-        this.skills = skills || '';
+        this.city = 'Houston, TX';
+        this.jobType = 'Information Technology';
         this.skillbox = page.getByRole('textbox', { name: 'Keywords' });
         this.locationText = page.getByRole('textbox', { name: 'Location' });
-        this.locationComplete = page.getByRole('option', { name: location });
+        this.locationComplete = page.getByRole('option', { name: this.city });
         this.jobBox = page.getByRole('combobox', { name: 'Job Function' });
         this.jobOption = page
             .getByRole('listbox')
             .locator('.category_listbox.listbox');
-        this.jobField = page.getByRole('option', { name: jobType });
+        this.jobField = page.getByRole('option', { name: this.jobType });
         this.submitButton = page.getByRole('button', {
             name: ' Begin Searching',
         });
@@ -54,9 +42,11 @@ export class R001 {
         await this.page.goto(Utilities.URLS.R001);
     }
 
-    async search() {
-        await this.skillbox.fill(this.skills);
-        await this.locationText.fill(this.city);
+    async search(city: string = this.city, skills?: string) {
+        await this.skillbox.fill(skills || '');
+        console.log(`Searching for ${skills || 'all jobs'} in ${city} under ${this.jobType}`);
+        await this.locationText.fill(city);
+        await this.locationText.press('Enter');
         await expect(this.locationComplete).toBeVisible();
         await this.locationComplete.click();
         await this.jobBox.click();
@@ -66,12 +56,14 @@ export class R001 {
         ).toBeTruthy();
         await this.jobField.click();
         await this.submitButton.click();
+        await this.page.waitForLoadState('domcontentloaded');
     }
 
     async getJobs(): Promise<Job[]> {
         await this.resultContainer.all();
         const foundJobs = this.jobs;
         const count = await foundJobs.count();
+        console.log(`Found ${count} jobs on R001`);
         const rawJobs = [] as Array<{
             id: string;
             title: string;
