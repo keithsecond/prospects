@@ -17,6 +17,7 @@ export class SchoolSpring {
     techCheckbox: Locator;
     supportStaffExpand: Locator;
     computerSupportCheckbox: Locator;
+    networkSupportCheckbox: Locator;
     searchButton: Locator;
     noAdmin: boolean;
 
@@ -46,6 +47,7 @@ export class SchoolSpring {
              name: 'expand Support Staff'
             });
         this.computerSupportCheckbox = page.getByRole('checkbox', { name: 'Computer Support' });
+        this.networkSupportCheckbox = page.getByRole('checkbox', { name: 'Network Services' });
         this.searchButton = page.getByRole('button', { name: 'Search' });
     }
 
@@ -60,8 +62,8 @@ export class SchoolSpring {
         await this.closeButton.click();
         await this.dropdown.click();
         const adminExists = await this.adminExpand.count() > 0;
-        const computerExists = await this.supportStaffExpand.count() > 0;
-        if (!adminExists && !computerExists) {
+        const supportExists = await this.supportStaffExpand.count() > 0;
+        if (!adminExists && !supportExists) {
             return (this.noAdmin = true);
         }
         if (await this.adminExpand.isVisible()) {
@@ -71,15 +73,19 @@ export class SchoolSpring {
             await this.supportStaffExpand.click();
         }
         const techExists = await this.techCheckbox.count() > 0;
-        const supportExists = await this.computerSupportCheckbox.count() > 0;
-        if (!techExists && !supportExists) {
+        const computerExists = await this.computerSupportCheckbox.count() > 0;
+        const networkExists = await this.networkSupportCheckbox.count() > 0;
+        if (!techExists && !computerExists && !networkExists) {
             return (this.noAdmin = true);
         }
         if (techExists) {
             await this.techCheckbox.check()
         }
-        if (supportExists) {
+        if (computerExists) {
             await this.computerSupportCheckbox.check();
+        }
+        if (networkExists) {
+            await this.networkSupportCheckbox.check();
         }
         await this.searchButton.click();
         await this.page.waitForTimeout(500);
