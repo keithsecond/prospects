@@ -14,7 +14,7 @@ eslint.config.mjs
 
 /.env
 /.auth/*
-!/.auth/env.example
+!/.auth/.env.example
 
 /utilities/
 
