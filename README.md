@@ -4,146 +4,233 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 
-A comprehensive Playwright-based tool for automated job search across multiple employment platforms. Features parallel test execution, batch job consolidation, and stateful job tracking.
+A Playwright/TypeScript automation framework for aggregating job listings across multiple employer platforms. Uses Page Object Model architecture, parallel test execution with race-condition-safe batch writes, CDP browser integration for bot-detection bypass, and stateful job tracking with deduplication.
 
-## ✨ Features
+---
 
-- **Parallel Test Execution**: Run job searches across multiple sites simultaneously using all CPU cores
-- **Batch Job Consolidation**: Safe file writing prevents data collisions during parallel execution
-- **Stateful Job Tracking**: Maintains job application status and notes
-- **Multiple Job Boards**: Supports ADP, ApplyToJob, SchoolSpring, Applitrack, and recruiter platforms
-- **Custom Browser Automation**: Includes CDP browser integration for enhanced scraping capabilities
-- **Comprehensive Reporting**: HTML test reports with screenshots and traces
+## Features
 
-## 📁 Project Structure
+- **Page Object Model (POM)**: Each job platform has its own typed page class with locators, navigation, and extraction logic cleanly separated from test specs
+- **Parallel Execution**: All providers run simultaneously using all available CPU cores via Playwright's `fullyParallel` mode
+- **Race-Condition-Safe Batch Writes**: Parallel tests write to isolated per-org batch files; a `globalTeardown` hook consolidates and deduplicates into a single `jobResults.json` after all tests complete
+- **CDP Browser Integration**: Connects to a locally running Chrome Debug Protocol instance to bypass bot-detection on sites that flag headless browsers; gracefully degrades when CDP is unavailable
+- **Webdriver Fingerprint Suppression**: `SpecialContextPage` patches `navigator.webdriver` at the browser context level for non-CDP sessions
+- **Stateful Job Tracking**: `jobResults.json` persists across runs; new jobs are appended and deduplicated by job ID — previously found jobs retain their status and notes
+- **Skip Logic**: SchoolSpring and Applitrack providers detect sites with no relevant job categories and skip cleanly rather than failing
+- **Fixture-Based Auth**: BISD uses a custom Playwright fixture with session caching, CDP context, and `.env`-based credential injection
+- **CI/CD Mode**: Switches to serial execution and retry logic when `CI=true`
+
+---
+
+## Project Structure
 
 ```
 prospects/
 │
-├── auth/                   # Authentication storage (.gitignore)
-├── tests/                  # Test specifications for each job board
-├── pages/                  # Page Object Model classes
-├── fixtures/               # Shared test fixtures and configurations
-├── classes/                # Helper utilities for JSON data mapping
-├── test-data/              # JSON datastores (.gitignore)
-│   ├── jobResults.json     # Consolidated job search results
-│   ├── sites.json          # Configured job search sites
-│   └── .batch/             # Temporary batch files (auto-cleaned)
-├── playwright.config.ts    # Playwright configuration
-├── globalTeardown.ts       # Post-test cleanup handler
-├── package.json
-├── README.md
-└── tsconfig.json
+├── tests/                        # Test specs — one per provider
+│   ├── adpJobs.spec.ts           # ADP Workboard sites
+│   ├── atjJobs.spec.ts           # ApplyToJob sites
+│   ├── schoolspringJobs.spec.ts  # SchoolSpring (school districts)
+│   ├── applitrackJobs.spec.ts    # Applitrack (school districts)
+│   ├── bisd.spec.ts              # BISD — authenticated, CDP, serial
+│   ├── R001Search.spec.ts        # Local recruiter search
+│   └── uaWebdriver.spec.ts       # CDP / UA fingerprint validation
+│
+├── pages/                        # Page Object Model classes
+│   ├── adpSearch.ts              # ADP job board POM
+│   ├── atjSearch.ts              # ApplyToJob POM
+│   ├── schoolspring.ts           # SchoolSpring POM (with category filters)
+│   ├── applitrack.ts             # Applitrack POM
+│   ├── bisd.ts                   # BISD POM (auth + search + pagination)
+│   ├── jobSites/
+│   │   └── indeed.ts             # Indeed (extends SpecialContextPage)
+│   └── localRecruiters/
+│       └── recruiter001/
+│           └── recruiter001Search.ts  # Local recruiter POM
+│
+├── classes/                      # Shared utilities and helpers
+│   ├── utilities.ts              # Job types, batch writes, deduplication, site config
+│   ├── specialContextPage.ts     # CDP and navigator.webdriver patching
+│   └── cdpValidator.ts           # CDP port check and Chrome launcher
+│
+├── fixtures/
+│   └── bisd-auth.ts              # Playwright fixture: BISD session caching + CDP auth
+│
+├── test-data/
+│   ├── sites.json                # All configured job search sites and URLs
+│   ├── jobResults.json           # Persistent job results store (gitignored)
+│   └── applied.json              # Application status tracking (gitignored)
+│
+├── playwright.config.ts          # Playwright config: parallel, CI, retries, UA
+├── globalTeardown.ts             # Post-run batch consolidation
+├── tsconfig.json                 # Strict TypeScript, path aliases (@pages, @classes, @fixtures)
+└── package.json
 ```
 
-## 🚀 Installation
+---
 
-### Prerequisites
+## Prerequisites
 
 - Node.js 16+
-- npm or yarn
+- npm
 
-### Setup
+For CDP features (BISD, webdriver fingerprint tests):
+- Google Chrome installed at the default macOS path (`/Applications/Google Chrome.app`)
 
-**Install Dependencies Playwright browsers**
-   ```bash
-   npm install
-   npx playwright install chromium
-   ```
+---
 
-## 📖 Usage
+## Installation
 
-### Basic Job Search
-
-Run all configured job searches in parallel:
 ```bash
-npm test
+npm install
+npx playwright install chromium
 ```
 
-### Single Site Testing
+Configure credentials for authenticated sites:
 
-Test a specific job board:
 ```bash
-# ADP Workboards
-npx playwright test tests/adpJobs.spec.ts
-
-# ApplyToJob sites
-npx playwright test tests/atjJobs.spec.ts
-
-# School districts
-npx playwright test tests/schoolspringJobs.spec.ts
+cp .auth/.env.example .auth/.env
+# Edit .auth/.env and set BISD_EMAIL and BISD_PASSWORD
 ```
 
-### Custom Search Queries
+---
 
-Search for specific job terms:
+## Usage
+
+### Run all providers in parallel
+
 ```bash
-# Set search term and run recruiter search
+npx playwright test
+```
+
+### Run a specific provider
+
+```bash
+# Provider sites
+npx playwright test tests/{provider}.spec.ts
+```
+
+### Custom keyword search (local recruiter)
+
+```bash
 export SEARCH="software engineer"
 npx playwright test tests/R001Search.spec.ts
 unset SEARCH
 ```
 
-### Browser Compatibility Testing
+If `SEARCH` is not set, the recruiter spec defaults to an IT-category search.
 
-Test CDP browser integration:
+### Validate CDP and webdriver fingerprint
+
 ```bash
 npx playwright test tests/uaWebdriver.spec.ts --ui
 ```
 
-### CI/CD Execution
+Screenshots are saved to `test-data/screenshotNoNav.png` (navigator patch) and `test-data/screenshotCDP.png` (CDP session) for visual verification.
 
-For continuous integration (runs serially):
+### CI/CD mode (serial, with retries)
+
 ```bash
-CI=true npm test
+CI=true npx playwright test
 ```
 
-## 🔧 Configuration
+---
 
-### Job Sites Configuration
+## Configuration
 
-Edit `test-data/sites.json` to add or modify job search sites:
+### Adding job sites
+
+Edit `test-data/sites.json`. Sites are grouped by category and each entry requires `id`, `org`, `URL`, and `Provider`:
 
 ```json
 {
   "Private": [
     {
       "id": "P001",
-      "org": "Example School",
-      "URL": "https://example.com/jobs",
+      "org": "Example Organization",
+      "URL": "https://example.com/careers",
       "Provider": "ADP"
     }
   ]
 }
 ```
 
-### Playwright Configuration
+Supported `Provider` values: `ADP`, `ATJ`, `schoolspring`, `applitrack`, `bisd`, `r001`
 
-Modify `playwright.config.ts` for custom settings:
+### Adding a new provider
 
-- **Parallel execution**: `fullyParallel: true`
-- **Worker count**: `workers: undefined` (auto-detect CPU cores)
-- **Timeouts**: Adjust timeouts for slower sites
-- **Browser options**: Configure browser launch parameters
+1. **Create a Page Object** in `pages/`:
 
-## 📊 Results & Data Management
+```typescript
+import { Page, Locator } from '@playwright/test';
+import { Job, Utilities } from '@classes/utilities';
 
-### Job Results Structure
+export class NewProvider {
+    page: Page;
+    utils: Utilities;
+    id: string;
+    // define locators...
 
-Jobs are stored in `test-data/jobResults.json` with the following structure:
+    constructor(page: Page, id?: string) {
+        this.page = page;
+        this.utils = new Utilities();
+        this.id = id || '';
+        // initialize locators...
+    }
+
+    async searchPage() {
+        await this.page.goto(Utilities.URLS[this.id]);
+    }
+
+    async getJobs(): Promise<Job[]> {
+        // extract and return normalized jobs
+        return this.utils.normalizeJobs(rawJobs);
+    }
+}
+```
+
+2. **Add a test spec** in `tests/`:
+
+```typescript
+import { test } from '@playwright/test';
+import { NewProvider } from '@pages/newProvider';
+import { Utilities } from '@classes/utilities';
+
+test.describe('New Provider', () => {
+    const sites = Utilities.getSitesByProvider('newprovider');
+    const utils = new Utilities();
+
+    for (const site of sites) {
+        test(`New Provider ${site.org}`, async ({ page }) => {
+            const provider = new NewProvider(page, site.id);
+            await provider.searchPage();
+            const jobs = await provider.getJobs();
+            if (site.id) await utils.batchAppendJobs(site.id, jobs);
+        });
+    }
+});
+```
+
+3. **Add sites** to `test-data/sites.json` with the matching `Provider` value.
+
+---
+
+## Job Results
+
+Results are written to `test-data/jobResults.json` and persist across runs. Each entry is keyed by organization name:
 
 ```json
 {
-  "Organization Name": {
-    "Site": "Organization Name",
-    "URL": "https://example.com/jobs",
+  "Example Organization": {
+    "Site": "Example Organization",
+    "URL": "https://example.com/careers",
     "jobs": [
       {
         "id": "JOB123",
-        "title": "Software Engineer",
-        "link": "https://example.com/job/JOB123",
+        "title": "QA Automation Engineer",
+        "link": "https://example.com/careers/JOB123",
         "status": "0",
-        "date": "2024-01-15",
+        "date": "2026-05-13",
         "notes": ""
       }
     ]
@@ -151,69 +238,49 @@ Jobs are stored in `test-data/jobResults.json` with the following structure:
 }
 ```
 
-### Status Definitions
+### Status values
 
-- `"0"`: New job
-- `"1"`: Applied
-- `"2"`: Received reply
-- `"3"`: Interviewing
-- `"4"`: Declined
+| Value | Meaning |
+|---|---|
+| `"0"` | New / not yet reviewed |
+| `"1"` | Applied |
+| `"2"` | Response received |
+| `"3"` | Interviewing |
+| `"4"` | Declined |
 
-## 🛠️ Development
+Jobs already present in `jobResults.json` are never overwritten — their `status` and `notes` are preserved across subsequent runs.
 
-### Adding New Job Boards
+---
 
-1. **Create Page Object Model** in `pages/`
-   ```typescript
-   export class NewJobBoard {
-     constructor(page: Page, siteId?: string) {}
-     async searchPage() { /* Navigate to search page */ }
-     async getJobs(): Promise<Job[]> { /* Extract jobs */ }
-   }
-   ```
+## How batch writes work
 
-2. **Add test specification** in `tests/`
-   ```typescript
-   test.describe('New Job Board', () => {
-     const sites = Utilities.getSitesByProvider('newboard');
-     sites.forEach(site => {
-       test(`Search ${site.org}`, async ({ page }) => {
-         const board = new NewJobBoard(page, site.id);
-         await board.searchPage();
-         const jobs = await board.getJobs();
-         await utils.batchAppendJobs(site.id, jobs);
-       });
-     });
-   });
-   ```
+Playwright's parallel execution means multiple tests can finish and attempt file writes simultaneously. Writing directly to `jobResults.json` from parallel workers would cause data races and corruption.
 
-3. **Update site configuration** in `test-data/sites.json`
+Instead:
 
-### Running Tests in Development
+1. Each test calls `batchAppendJobs()`, which writes to an isolated file in `test-data/.batch/<org>.json`
+2. After all tests complete, `globalTeardown` calls `consolidateBatchWrites()`, which reads all batch files, merges them into `jobResults.json` with deduplication, and cleans up the `.batch` directory
 
-```bash
-# Run with UI mode for debugging
-npx playwright test --ui
+This guarantees no data loss or file collisions regardless of how many workers are running.
 
-# Run specific test with debugging
-npx playwright test tests/example.spec.ts --debug
+---
 
-# Generate and view HTML report
-npx playwright show-report
-```
+## CDP Integration
 
-## 📋 TODO
+Some sites (BISD) require a session logged in through a real browser, or actively detect and block headless automation. For these, the framework connects to a locally running Chrome instance via the Chrome Debug Protocol (CDP).
 
-- [ ] Deploy self-hosted chrome-debug docker container via Github actions
-- [ ] Add more job board integrations
-- [ ] Implement job application automation
-- [ ] Add email notifications for new jobs
-- [ ] Create web dashboard for job tracking [vibe-tracker](https://github.com/keithsecond/vibe-tracker)
-- [ ] Add job filtering and search capabilities
-- [ ] Document API for external integrations
+`CDPValidator` checks port 9222 for an active CDP session. If unavailable, it attempts to launch Chrome with `--remote-debugging-port=9222`. Tests that depend on CDP skip gracefully if a connection cannot be established.
 
-## ⚠️ Disclaimer
+`SpecialContextPage` provides two modes:
+- `noNavigator()` — creates a new browser context and patches `navigator.webdriver` out of the prototype chain at page initialization
+- `cdpBrowser()` — connects to the CDP endpoint and creates an isolated context on the live Chrome instance
 
-This tool is a proof of concept and should not be used in a production environment. It is designed for educational purposes only.
+---
 
-**Important**: According to the terms of service of most job search websites, the use of robots, spiders, manual, and/or automatic processes, or devices to data-mine, data-crawl, scrape, or index websites is prohibited. Use this tool responsibly and at your own risk.
+## Roadmap
+
+- [ ] Deploy self-hosted Chrome debug container via GitHub Actions
+- [x] Web dashboard for job tracking ([vibe-tracker](https://github.com/keithsecond/vibe-tracker))
+- [ ] Additional provider integrations
+- [ ] Email or notification alerts for new jobs
+- [ ] Job filtering and keyword scoring

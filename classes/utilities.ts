@@ -212,6 +212,7 @@ export class Utilities {
             ...sites.Universities,
             ...sites.Sites,
             ...sites.Recruiters,
+            ...sites.Employers,
         ].filter(site => site.Provider === provider);
     }
 
@@ -222,6 +223,7 @@ export class Utilities {
             ...sites.Universities,
             ...sites.Sites,
             ...sites.Recruiters,
+            ...sites.Employers,
         ].map(x => [x.id, x.URL])
     );
 
@@ -232,6 +234,7 @@ export class Utilities {
             ...sites.Universities,
             ...sites.Sites,
             ...sites.Recruiters,
+            ...sites.Employers,
         ].map(x => [x.id, x.org])
     );
 }

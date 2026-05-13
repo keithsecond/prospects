@@ -56,7 +56,7 @@ export class R001 {
         ).toBeTruthy();
         await this.jobField.click();
         await this.submitButton.click();
-        await this.page.waitForLoadState('domcontentloaded');
+        await this.page.waitForLoadState('domcontentloaded', { timeout: 60000 });
     }
 
     async getJobs(): Promise<Job[]> {
