@@ -26,44 +26,28 @@ A Playwright/TypeScript automation framework for aggregating job listings across
 
 ```
 prospects/
-│
-├── tests/                        # Test specs — one per provider
-│   ├── adpJobs.spec.ts           # ADP Workboard sites
-│   ├── atjJobs.spec.ts           # ApplyToJob sites
-│   ├── schoolspringJobs.spec.ts  # SchoolSpring (school districts)
-│   ├── applitrackJobs.spec.ts    # Applitrack (school districts)
-│   ├── bisd.spec.ts              # BISD — authenticated, CDP, serial
-│   ├── R001Search.spec.ts        # Local recruiter search
+├── tests/
+│   ├── adpJobs.spec.ts
+│   ├── atjJobs.spec.ts
+│   ├── schoolspringJobs.spec.ts
+│   ├── applitrackJobs.spec.ts
+│   ├── bisd.spec.ts              # authenticated, CDP, serial
+│   ├── R001Search.spec.ts
 │   └── uaWebdriver.spec.ts       # CDP / UA fingerprint validation
-│
 ├── pages/                        # Page Object Model classes
-│   ├── adpSearch.ts              # ADP job board POM
-│   ├── atjSearch.ts              # ApplyToJob POM
-│   ├── schoolspring.ts           # SchoolSpring POM (with category filters)
-│   ├── applitrack.ts             # Applitrack POM
-│   ├── bisd.ts                   # BISD POM (auth + search + pagination)
-│   ├── jobSites/
-│   │   └── indeed.ts             # Indeed (extends SpecialContextPage)
-│   └── localRecruiters/
-│       └── recruiter001/
-│           └── recruiter001Search.ts  # Local recruiter POM
-│
-├── classes/                      # Shared utilities and helpers
+├── classes/                      # Helpers   
 │   ├── utilities.ts              # Job types, batch writes, deduplication, site config
 │   ├── specialContextPage.ts     # CDP and navigator.webdriver patching
 │   └── cdpValidator.ts           # CDP port check and Chrome launcher
-│
 ├── fixtures/
-│   └── bisd-auth.ts              # Playwright fixture: BISD session caching + CDP auth
-│
-├── test-data/
+│   └── bisd-auth.ts              # BISD session caching + CDP auth
+├── test-data/                    # .gitignore files
 │   ├── sites.json                # All configured job search sites and URLs
-│   ├── jobResults.json           # Persistent job results store (gitignored)
-│   └── applied.json              # Application status tracking (gitignored)
-│
-├── playwright.config.ts          # Playwright config: parallel, CI, retries, UA
+│   ├── jobResults.json           # Persistent job results store
+│   └── applied.json              # Application status tracking
+├── playwright.config.ts
 ├── globalTeardown.ts             # Post-run batch consolidation
-├── tsconfig.json                 # Strict TypeScript, path aliases (@pages, @classes, @fixtures)
+├── tsconfig.json
 └── package.json
 ```
 
