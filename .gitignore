@@ -12,8 +12,9 @@ eslint.config.mjs
 /playwright/.auth/
 /.vscode/
 
-/.auth/
 /.env
+/.auth/*
+!/.auth/env.example
 
 /utilities/
 
