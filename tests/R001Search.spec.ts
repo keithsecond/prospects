@@ -1,6 +1,6 @@
 import { test } from '@playwright/test';
 import { Utilities } from '@classes/utilities';
-import { R001 } from '@pages/localRecruiters/recruiter001/recruiter001Search';
+import { R001 } from '@pages/localRecruiters/r001/r001Search';
 
 
 test.describe('r001 Tests', () => {

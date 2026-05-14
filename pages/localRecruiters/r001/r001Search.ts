@@ -4,6 +4,7 @@ import { Job, Utilities } from '@classes/utilities';
 export class R001 {
     page: Page;
     utils: Utilities;
+    url: string;
     city: string;
     jobType: string;
     skillbox: Locator;
@@ -21,6 +22,7 @@ export class R001 {
     ) {
         this.page = page;
         this.utils = new Utilities();
+        this.url = Utilities.URLS.R001 + '/index.smpl?arg=jb_search';
         this.city = 'Houston, TX';
         this.jobType = 'Information Technology';
         this.skillbox = page.getByRole('textbox', { name: 'Keywords' });
@@ -39,7 +41,8 @@ export class R001 {
     }
 
     async searchPage() {
-        await this.page.goto(Utilities.URLS.R001);
+        console.log(`Navigating to ${this.url}`);
+        await this.page.goto(this.url);
     }
 
     async search(city: string = this.city, skills?: string) {
@@ -72,7 +75,8 @@ export class R001 {
         for (let i = 0; i < count; i++) {
             const jobWeb = foundJobs.nth(i);
             const title = await jobWeb.textContent();
-            const link = await jobWeb.getAttribute('href');
+            const href = await jobWeb.getAttribute('href');
+            const link = Utilities.URLS.R001 + href;
             if (!link || link === '#') continue;
             const id = link.split('/').pop() || '';
             if (!id || !title) continue;

@@ -1,7 +1,6 @@
 import { test } from '@fixtures/bisd-auth';
 import { Utilities } from '@classes/utilities';
 import { CDPValidator } from '@classes/cdpValidator';
-import { expect } from '@playwright/test';
 
 const utils = new Utilities();
 const searchTerms = ['IT', 'IT Software', 'ITIL', 'IT Support', 'IT Infrastructure', 'Help Desk', 'Help Desk Analyst', 'Service Desk'];
