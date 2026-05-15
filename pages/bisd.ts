@@ -58,6 +58,7 @@ export class BISD {
         await this.password.fill(password);
         await this.submitButton.click();
         await this.userMenu.isVisible();
+        await this.page.waitForLoadState('networkidle');
     }
 
     async search(searchTerm: string) {

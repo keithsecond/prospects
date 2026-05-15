@@ -41,13 +41,11 @@ export class R001 {
     }
 
     async searchPage() {
-        console.log(`Navigating to ${this.url}`);
         await this.page.goto(this.url);
     }
 
     async search(city: string = this.city, skills?: string) {
         await this.skillbox.fill(skills || '');
-        console.log(`Searching for ${skills || 'all jobs'} in ${city} under ${this.jobType}`);
         await this.locationText.fill(city);
         await this.locationText.press('Enter');
         await expect(this.locationComplete).toBeVisible();
@@ -66,7 +64,6 @@ export class R001 {
         await this.resultContainer.all();
         const foundJobs = this.jobs;
         const count = await foundJobs.count();
-        console.log(`Found ${count} jobs on R001`);
         const rawJobs = [] as Array<{
             id: string;
             title: string;

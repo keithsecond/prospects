@@ -15,9 +15,10 @@ test.describe('BISD', () => {
     });
     for (const searchTerm of searchTerms) {
         test(`BISD ${searchTerm}`, async ({ bisd }) => {
-            test.setTimeout(120000);
-            await bisd.search(searchTerm);
+            test.slow();
             const jobs = await bisd.getJobs(searchTerm);
+            const descriptions = await bisd.jobDetails('171816800080');
+            console.log(descriptions);
             await utils.batchAppendJobs('bisd', jobs);
         });
     }
