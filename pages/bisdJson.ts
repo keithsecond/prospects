@@ -1,11 +1,11 @@
 import { Locator, Page, expect } from '@playwright/test';
 import { Job, Utilities } from '@classes/utilities';
-import { json } from 'node:stream/consumers';
 
 export class BISD {
     page: Page;
     utils: Utilities;
     url: string;
+    domain: string;
     loginLink: Locator;
     username: Locator;
     usernameButton: Locator;
@@ -18,7 +18,8 @@ export class BISD {
     ) {
         this.page = page;
         this.utils = new Utilities();
-        this.url = Utilities.URLS["I001"];
+        this.url = Utilities.URLS['I001'];
+        this.domain = Utilities.DOMAINS['I001'];
         this.loginLink = page.locator('.candidate-login-link');
         this.username = page.getByTestId('auth-entry-email-input');
         this.usernameButton = page.getByRole('button', { name: 'Continue' });
@@ -41,7 +42,25 @@ export class BISD {
         await this.page.waitForLoadState('networkidle');
     }
 
-    async getJobs(searchTerm: string): Promise<Job[]> {
+    buildUrl(params: Record<string, string | string[]>, query = '', pageSize = 100): string {
+        const q = new URLSearchParams();
+        q.set('search_data_id', 'search');
+        q.set('page_size', String(pageSize));
+        q.set('start', '0');
+        q.set('query', String(query));
+        q.set('recommended', '0');
+        q.set('domain', this.domain);
+        q.set('exclude_entities_outside_location', 'false');
+        q.set('caller_id', 'ch_marketplace%3Aposition');
+        q.set('prefill_first_record', 'false');
+        for (const [k, v] of Object.entries(params)) {
+            if (Array.isArray(v)) v.forEach(val => q.append(k, val));
+            else q.set(k, v);
+        }
+        return `${this.url}/api/career_hub/v1/search/position?${q.toString()}`;
+    }
+
+    async getJobs(searchTerm: string, params: Record<string, string | string[]> = {}): Promise<Job[]> {
         const rawJobs = [] as Array<{
             id: string;
             title: string;
@@ -49,23 +68,20 @@ export class BISD {
         }>;
         let start = 0;
         let pageSize = 100;
-        const hostParts = this.url.replace('https://', '').split('.');
-        const companyDomain = hostParts.slice(1).join('.');
-        let queryUrl = `${this.url}/api/career_hub/v1/search/position?search_data_id=search&start=${start}&page_size=${pageSize}&entity_id=&query=${searchTerm}&recommended=0&display_filters=%7B%7D&domain=${companyDomain}&exclude_entities_outside_location=false&caller_id=ch_marketplace%3Aposition&prefill_first_record=false`;
-        let response = await this.page.goto(queryUrl);
+        let query = searchTerm;
+        const url = this.buildUrl(params, query, pageSize);
+        let response = await this.page.goto(url);
         let jsonData = await response?.json();
         let data = jsonData.data;
-        console.log(jsonData.status, "status");
         if (jsonData.status !== 200) {
             console.error(`API request failed with status: ${jsonData.status}`);
             return [];
         }
         const count = data.pagination.totalCount;
-        console.log(`Search for "${searchTerm}" returned ${count} results ${pageSize}`);
         if (count > pageSize) {
             console.warn(`${count} results exceeds page size. Increasing page size.`);
-            queryUrl = `${this.url}/api/career_hub/v1/search/position?search_data_id=search&start=${start}&page_size=${count}&entity_id=&query=${searchTerm}&recommended=0&display_filters=%7B%7D&domain=${companyDomain}&exclude_entities_outside_location=false&caller_id=ch_marketplace%3Aposition&prefill_first_record=false`;
-            response = await this.page.goto(queryUrl);
+            const newUrl = this.buildUrl(params, query, count);
+            response = await this.page.goto(newUrl);
             jsonData = await response?.json();
             data = jsonData.data;
             if (jsonData.status !== 200) {
@@ -93,9 +109,8 @@ export class BISD {
     }
 
     async jobDetails(jobId: string): Promise<string> {
-        const hostParts = this.url.replace('https://', '').split('.');
-        const companyDomain = hostParts.slice(1).join('.');
-        const queryUrl = `${this.url}/api/career_hub/v1/entity/position/${jobId}?entity_sections=details&domain=${companyDomain}&caller_id=ch_marketplace_details%3Aposition`;
+        const domain = this.domain;
+        const queryUrl = `${this.url}/api/career_hub/v1/entity/position/${jobId}?entity_sections=details&domain=${domain}&caller_id=ch_marketplace_details%3Aposition`;
         const response = await this.page.goto(queryUrl);
         const jsonData = await response?.json();
         if (jsonData.status !== 200) {
@@ -105,10 +120,8 @@ export class BISD {
         const details = jsonData.data.dataIds.details;
         const description = details.description;
         const cleanDescription = convertHtml(description);
-        console.log(cleanDescription, details.displayJobId);
         return cleanDescription;
     }
-
 }
 
 function convertHtml(htmlString: string): string {

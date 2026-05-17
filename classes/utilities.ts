@@ -227,6 +227,17 @@ export class Utilities {
         ].map(x => [x.id, x.URL])
     );
 
+    static DOMAINS = Object.fromEntries(
+    [
+        ...sites.Private,
+        ...sites.Public,
+        ...sites.Universities,
+        ...sites.Sites,
+        ...sites.Recruiters,
+        ...sites.Employers,
+    ].map(x => [x.id, x.domain])
+    );
+
     static ORGS: Record<string, string> = Object.fromEntries(
         [
             ...sites.Private,
