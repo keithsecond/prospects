@@ -15,13 +15,13 @@ export class BISD {
     userMenu: Locator;
 
     constructor(
-        page: Page, url?: string, domain?: string, org?: string
+        page: Page,
     ) {
         this.page = page;
         this.utils = new Utilities();
-        this.url = url || Utilities.URLS['I001'];
-        this.domain = domain || Utilities.DOMAINS['I001'];
-        this.orgs = org || Utilities.ORGS['I001'];
+        this.url = Utilities.URLS['I001'];
+        this.domain = Utilities.DOMAINS['I001'];
+        this.orgs = Utilities.ORGS['I001'];
         this.loginLink = page.locator('.candidate-login-link');
         this.username = page.getByTestId('auth-entry-email-input');
         this.usernameButton = page.getByRole('button', { name: 'Continue' });
@@ -76,10 +76,10 @@ export class BISD {
         let query = searchTerm;
         const url = this.buildJobsUrl(params, query, pageSize);
         let response = await this.page.goto(url);
-        let jsonData = await response?.json();
-        let data = jsonData.data;
-        if (jsonData.status !== 200) {
-            console.error(`API request failed with status: ${jsonData.status}`);
+        let json = await response?.json();
+        let data = json.data;
+        if (json.status !== 200) {
+            console.error(`API request failed with status: ${json.status}`);
             return [];
         }
         const count = data.pagination.totalCount;
@@ -87,10 +87,10 @@ export class BISD {
             console.warn(`${count} results exceeds page size. Increasing page size.`);
             const newUrl = this.buildJobsUrl(params, query, count);
             response = await this.page.goto(newUrl);
-            jsonData = await response?.json();
-            data = jsonData.data;
-            if (jsonData.status !== 200) {
-                console.error(`API request failed with status: ${jsonData.status}`);
+            json = await response?.json();
+            data = json.data;
+            if (json.status !== 200) {
+                console.error(`API request failed with status: ${json.status}`);
                 return [];
             }
         }
@@ -149,12 +149,12 @@ export class BISD {
         for (let i = 0; i < count; i++) {
             const jobUrl = this.buildDetailsUrl(params, ids[i]);
             const response = await this.page.goto(jobUrl);
-            const jsonData = await response?.json();
-            if (jsonData.status !== 200) {
-                console.error(`API request failed with status: ${jsonData.status}`);
+            const json = await response?.json();
+            if (json.status !== 200) {
+                console.error(`API request failed with status: ${json.status}`);
                 return [];
             }
-            const details = jsonData.data.dataIds.details;
+            const details = json.data.dataIds.details;
             const rawDescription = details.description;
             const title = details.title;
             const displayJobId = details.displayJobId;
@@ -166,6 +166,7 @@ export class BISD {
         return rawDetails;
     }
 }
+
     function convertHtml(htmlString: string): string {
         return htmlString
         .replace(/<br\s*\/?>/gi, '\n')

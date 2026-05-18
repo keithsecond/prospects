@@ -1,10 +1,11 @@
 import { readFile, writeFile, mkdir, readdir, unlink, rmdir } from 'fs/promises';
 import path from 'path';
 import sites from '../test-data/sites.json';
+import filters from '../test-data/filters.json';
 
 export type Job = {
     id: string;
-    title: string | null;
+    title: string;
     link: string;
     status: string;
     date: string;
@@ -18,7 +19,20 @@ export type JobInput = {
 };
 
 export type JobDetails = {
+    title: string;
+    displayJobId: string;
+    department: string;
     description: string;
+    entityId: string;
+};
+
+export type EightfoldSite = {
+    id: string;
+    org: string;
+    subdomain: string;
+    domain: string;
+    baseUrl: string;
+    filters: Record<string, string | string[]>;
 };
 
 export class Utilities {
@@ -301,13 +315,33 @@ export class Utilities {
     }
 
     /**
+     * Returns the config for a single eightfold public site by its site id.
+     *
+     * @param siteId key matching a top-level entry in filters.json (e.g. "E010").
+     * @returns EightfoldSite config or undefined if not found.
+     */
+    static getEightfoldSite(siteId: string): EightfoldSite | undefined {
+        const entry = (filters as Record<string, EightfoldSite>)[siteId];
+        return entry ?? undefined;
+    }
+
+    /**
+     * Returns all eightfold public site configs from filters.json.
+     *
+     * @returns array of EightfoldSite configs.
+     */
+    static getEightfoldSites(): EightfoldSite[] {
+        return Object.values(filters as Record<string, EightfoldSite>);
+    }
+
+    /**
      * Fetches all configured sites for a specific provider identifier.
      *
-     * @param provider provider name as appears in test-data/sites.json (e.g. "schoolspring").
+     * @param provider provider name as appears in test-data/sites.json.
      * @returns filtered array of site definitions.
      */
     static getSitesByProvider(provider: string) {
-        return [
+        const fromSites = [
             ...sites.Private,
             ...sites.Public,
             ...sites.Universities,
@@ -315,38 +349,55 @@ export class Utilities {
             ...sites.Recruiters,
             ...sites.Employers,
         ].filter(site => site.Provider === provider);
+
+        if (provider === 'eightfold') {
+            const fromFilters = Object.values(filters as Record<string, EightfoldSite>)
+                .map(f => ({
+                    id: f.id,
+                    org: f.org,
+                    URL: f.baseUrl,
+                    Provider: 'eightfold',
+                    domain: f.domain,
+                }));
+            return [...fromSites, ...fromFilters];
+        }
+
+        return fromSites;
     }
 
-    static URLS = Object.fromEntries(
-        [
-            ...sites.Private,
-            ...sites.Public,
-            ...sites.Universities,
-            ...sites.Sites,
-            ...sites.Recruiters,
-            ...sites.Employers,
-        ].map(x => [x.id, x.URL])
-    );
-
-    static DOMAINS = Object.fromEntries(
-    [
+    static URLS = Object.fromEntries([
         ...sites.Private,
         ...sites.Public,
         ...sites.Universities,
         ...sites.Sites,
         ...sites.Recruiters,
         ...sites.Employers,
-    ].map((x: any) => [x.id, x.domain])
-    );
+        ...Object.values(filters as Record<string, EightfoldSite>).map(f => ({
+            id: f.id, URL: f.baseUrl,
+        })),
+    ].map((x: any) => [x.id, x.URL]));
 
-    static ORGS: Record<string, string> = Object.fromEntries(
-        [
-            ...sites.Private,
-            ...sites.Public,
-            ...sites.Universities,
-            ...sites.Sites,
-            ...sites.Recruiters,
-            ...sites.Employers,
-        ].map(x => [x.id, x.org])
-    );
+    static DOMAINS = Object.fromEntries([
+        ...sites.Private,
+        ...sites.Public,
+        ...sites.Universities,
+        ...sites.Sites,
+        ...sites.Recruiters,
+        ...sites.Employers,
+        ...Object.values(filters as Record<string, EightfoldSite>).map(f => ({
+            id: f.id, domain: f.domain,
+        })),
+    ].map((x: any) => [x.id, x.domain]));
+
+    static ORGS: Record<string, string> = Object.fromEntries([
+        ...sites.Private,
+        ...sites.Public,
+        ...sites.Universities,
+        ...sites.Sites,
+        ...sites.Recruiters,
+        ...sites.Employers,
+        ...Object.values(filters as Record<string, EightfoldSite>).map(f => ({
+            id: f.id, org: f.org,
+        })),
+    ].map((x: any) => [x.id, x.org]));
 }
