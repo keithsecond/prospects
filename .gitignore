@@ -20,3 +20,5 @@ eslint.config.mjs
 
 /test-data/*
 !/test-data/.gitkeep
+
+/pages/bisdOld.ts

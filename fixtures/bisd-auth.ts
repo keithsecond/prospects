@@ -1,5 +1,5 @@
 import { test as base } from '@playwright/test';
-import { BISD } from '@pages/bisdJson';
+import { BISD } from '@pages/bisd';
 import { SpecialContextPage } from '@classes/specialContextPage';
 import path from 'path';
 import dotenv from 'dotenv';

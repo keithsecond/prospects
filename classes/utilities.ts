@@ -17,6 +17,10 @@ export type JobInput = {
     link: string;
 };
 
+export type JobDetails = {
+    description: string;
+};
+
 export class Utilities {
     filePath = path.join(__dirname, '../test-data/jobResults.json');
     batchDir = path.join(__dirname, '../test-data/.batch');
@@ -71,7 +75,6 @@ export class Utilities {
             const mainFileData = await readFile(this.filePath, 'utf-8');
             mainData = JSON.parse(mainFileData);
         } catch {
-            // jobResults.json doesn't exist yet, start with empty object
             mainData = {};
         }
         
@@ -79,16 +82,13 @@ export class Utilities {
             await Utilities.readdirSync(this.batchDir);
             // Batch directory exists, proceed with consolidation
         } catch {
-            // Batch directory doesn't exist, nothing to consolidate
             return;
         }
-        
-        // Create reverse lookup: org name -> site ID
+
         const reverseOrgs = Object.fromEntries(
             Object.entries(Utilities.ORGS).map(([id, org]) => [org, id])
         );
-        
-        // Read all batch files and merge
+
         try {
             const files = await Utilities.readdirSync(this.batchDir);
             for (const file of files) {
@@ -98,7 +98,6 @@ export class Utilities {
                 const batchData = JSON.parse(
                     await readFile(batchFile, 'utf-8')
                 );
-                
                 for (const [org, batchJobs] of Object.entries(batchData)) {
                     if (!mainData[org]) {
                         const siteId = reverseOrgs[org];
@@ -112,7 +111,6 @@ export class Utilities {
                     const existingIds = new Set(
                         mainData[org].jobs.map((job: Job) => job.id)
                     );
-                    
                     for (const job of batchJobs as Job[]) {
                         if (!existingIds.has(job.id)) {
                             mainData[org].jobs.push(job);
@@ -128,7 +126,6 @@ export class Utilities {
         
         await writeFile(this.filePath, JSON.stringify(mainData, null, 2));
         
-        // Clean up batch directory
         try {
             const files = await readdir(this.batchDir);
             for (const file of files) {
@@ -136,41 +133,103 @@ export class Utilities {
             }
             await rmdir(this.batchDir);
         } catch (err) {
-            // Log error for debugging
             console.error('Failed to clean up batch directory:', err);
         }
     }
 
     /**
-     * Writes new jobs to a shared JSON file (deduped by job.id).
+     * Writes new jobs directly to jobResults.json (deduped by job.id).
      * For serial test execution only. Use batchAppendJobs() for parallel tests.
      *
      * @param key provider site key used to map org and URL fields.
      * @param jobs normalized job list to append to existing records.
      */
     async writeJobs(key: string, jobs: Job[]) {
-        const fileData = await readFile(this.filePath, 'utf-8');
-        const data = JSON.parse(fileData);
+        let data: Record<string, any> = {};
+        try {
+            const fileData = await readFile(this.filePath, 'utf-8');
+            data = JSON.parse(fileData);
+        } catch {
+            data = {};
+        }
+
         const org = Utilities.ORGS[key] || key;
         const url = Utilities.URLS[key] || '';
-        if (!data[org]) {
+
+        if (!data[org] || typeof data[org] !== 'object') {
             data[org] = {
-                Site: '',
+                Site: org,
                 URL: url,
                 jobs: [],
             };
         }
+
+        if (!Array.isArray(data[org].jobs)) {
+            data[org].jobs = [];
+        }
+
+        data[org].Site = String(data[org].Site || org);
+        data[org].URL = String(data[org].URL || url);
+
         const existingJobIds = new Set(
             data[org].jobs.map((job: Job) => job.id)
         );
+
         for (const job of jobs) {
             if (!existingJobIds.has(job.id)) {
                 data[org].jobs.push(job);
+                existingJobIds.add(job.id);
             }
         }
+
         await writeFile(this.filePath, JSON.stringify(data, null, 2));
     }
     
+    /**
+     * Writes job details to a per-org details JSON file.
+     * File path: ../test-data/<org>.description.json
+     *
+     * @param key provider site key used to map org and filename.
+     * @param details array returned from page.jobDetails()
+     */
+    async writeDetails(key: string, details: Array<any>) {
+        const org = Utilities.ORGS[key] || key;
+        const detailsFile = path.join(__dirname, `../test-data/description/${org}.description.json`);
+
+        let data: Record<string, { jobs: any[] }> = {};
+        try {
+            const existing = await readFile(detailsFile, 'utf-8');
+            data = JSON.parse(existing);
+        } catch {
+            data = {};
+        }
+
+        if (!data[org] || typeof data[org] !== 'object') {
+            data[org] = { jobs: [] };
+        }
+
+        const existingIds = new Set(
+            (data[org].jobs || []).map((j: any) => String(j.JobID))
+        );
+
+        for (const d of details || []) {
+            const jobObj = {
+                title: d.title,
+                JobID: d.displayJobId,
+                Department: d.department,
+                'URL entity': d.entityId,
+                Description: d.description,
+            };
+
+            if (!existingIds.has(String(jobObj.JobID))) {
+                data[org].jobs.push(jobObj);
+                existingIds.add(String(jobObj.JobID));
+            }
+        }
+
+        await writeFile(detailsFile, JSON.stringify(data, null, 2));
+    }
+
     /**
      * Utility to read directory in synchronous manner.
      */
@@ -197,6 +256,44 @@ export class Utilities {
                 date: today,
                 notes: '',
             }));
+    }
+
+    static JOB_RESULTS_PATH = path.join(__dirname, '../test-data/jobResults.json');
+
+    static async getSiteJobIds(siteId: string): Promise<Record<string, string[]> | string[]> {
+        let results: Record<string, any> = {};
+        try {
+            const raw = await readFile(Utilities.JOB_RESULTS_PATH, 'utf-8');
+            results = JSON.parse(raw);
+        } catch {
+            return siteId ? [] : {};
+        }
+
+        const reverseOrgs = Object.fromEntries(
+            Object.entries(Utilities.ORGS)
+                .map(([id, org]) => [String(org || '').trim(), id])
+        );
+        const map: Record<string, string[]> = {};
+        for (const [key, entry] of Object.entries(results)) {
+            if (key === 'Status Definitions') continue;
+            const siteName = String((entry && (entry.Site || key)) || '').trim();
+            if (!siteName) continue;
+
+            let id = reverseOrgs[siteName];
+            if (!id) {
+                for (const [orgId, org] of Object.entries(Utilities.ORGS)) {
+                    if (String(org || '').trim().toLowerCase() === siteName.toLowerCase()) {
+                        id = orgId;
+                        break;
+                    }
+                }
+            }
+            if (!id) continue;
+
+            const jobs = Array.isArray((entry as any).jobs) ? (entry as any).jobs : [];
+            map[id] = jobs.map((j: any) => String(j.id)).filter(Boolean);
+        }
+        return siteId ? (map[siteId] || []) : map;
     }
 
     /**
@@ -235,7 +332,7 @@ export class Utilities {
         ...sites.Sites,
         ...sites.Recruiters,
         ...sites.Employers,
-    ].map(x => [x.id, x.domain])
+    ].map((x: any) => [x.id, x.domain])
     );
 
     static ORGS: Record<string, string> = Object.fromEntries(
