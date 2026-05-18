@@ -139,11 +139,15 @@ export class Utilities {
 
     /**
      * Writes new jobs directly to jobResults.json (deduped by job.id).
-     * For serial test execution only. Use batchAppendJobs() for parallel tests.
+     *
+     * @deprecated Use {@link batchAppendJobs} instead. Direct writes are unsafe
+     * under parallel execution and bypass the consolidation step in globalTeardown.
+     * Retained for one-shot debugging only.
      *
      * @param key provider site key used to map org and URL fields.
      * @param jobs normalized job list to append to existing records.
-     */
+    */
+
     async writeJobs(key: string, jobs: Job[]) {
         let data: Record<string, any> = {};
         try {

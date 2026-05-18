@@ -29,7 +29,7 @@ test.describe('BISD', () => {
                 }
             }
             bisdJobs.push(...newJobs);
-            await utils.writeJobs('I001', jobs);
+            await utils.batchAppendJobs('I001', newJobs);
         });
     }
     test('BISD Job Details', async ({ bisd }) => {
