@@ -1,131 +1,126 @@
-# PROSPECTS
+# Prospects
 
 [![Playwright](https://img.shields.io/badge/Playwright-45ba4b?style=for-the-badge&logo=playwright&logoColor=white)](https://playwright.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 
-A Playwright/TypeScript automation framework for aggregating job listings across multiple employer platforms. Uses Page Object Model architecture, parallel test execution with race-condition-safe batch writes, CDP browser integration for bot-detection bypass, and stateful job tracking with deduplication.
-
----
-
-## Features
-
-- **Page Object Model (POM)**: Each job platform has its own typed page class with locators, navigation, and extraction logic cleanly separated from test specs
-- **Parallel Execution**: All providers run simultaneously using all available CPU cores via Playwright's `fullyParallel` mode
-- **Race-Condition-Safe Batch Writes**: Parallel tests write to isolated per-org batch files; a `globalTeardown` hook consolidates and deduplicates into a single `jobResults.json` after all tests complete
-- **CDP Browser Integration**: Connects to a locally running Chrome Debug Protocol instance to bypass bot-detection on sites that flag headless browsers; gracefully degrades when CDP is unavailable
-- **Webdriver Fingerprint Suppression**: `SpecialContextPage` patches `navigator.webdriver` at the browser context level for non-CDP sessions
-- **Stateful Job Tracking**: `jobResults.json` persists across runs; new jobs are appended and deduplicated by job ID — previously found jobs retain their status and notes
-- **Skip Logic**: SchoolSpring and Applitrack providers detect sites with no relevant job categories and skip cleanly rather than failing
-- **Fixture-Based Auth**: BISD uses a custom Playwright fixture with session caching, CDP context, and `.env`-based credential injection
-- **CI/CD Mode**: Switches to serial execution and retry logic when `CI=true`
-
----
-
-## Project Structure
+A job aggregation pipeline that consolidates career portals into a single deduplicated, stateful record. Parallel HTML scraping, REST JSON APIs, and authenticated sessions behind bot detection under a unified Page Object Model.
 
 ```
-prospects/
-├── tests/
-│   ├── adpJobs.spec.ts
-│   ├── atjJobs.spec.ts
-│   ├── schoolspringJobs.spec.ts
-│   ├── applitrackJobs.spec.ts
-│   ├── bisd.spec.ts              # authenticated, CDP, serial
-│   ├── R001Search.spec.ts
-│   └── uaWebdriver.spec.ts       # CDP / UA fingerprint validation
-├── pages/                        # Page Object Model classes
-├── classes/                      # Helpers   
-│   ├── utilities.ts              # Job types, batch writes, deduplication, site config
-│   ├── specialContextPage.ts     # CDP and navigator.webdriver patching
-│   └── cdpValidator.ts           # CDP port check and Chrome launcher
-├── fixtures/
-│   └── bisd-auth.ts              # BISD session caching + CDP auth
-├── test-data/                    # .gitignore files
-│   ├── sites.json                # All configured job search sites and URLs
-│   ├── jobResults.json           # Persistent job results store
-│   └── applied.json              # Application status tracking
-├── playwright.config.ts
-├── globalTeardown.ts             # Post-run batch consolidation
-├── tsconfig.json
-└── package.json
-```
-
----
-
-## Prerequisites
-
-- Node.js 16+
-- npm
-
-For CDP features (BISD, webdriver fingerprint tests):
-- Google Chrome installed at the default macOS path (`/Applications/Google Chrome.app`)
-
----
-
-## Installation
-
-```bash
 npm install
 npx playwright install chromium
-```
-
-Configure credentials for authenticated sites:
-
-```bash
-cp .auth/.env.example .auth/.env
-# Edit .auth/.env and set BISD_EMAIL and BISD_PASSWORD
-```
-
----
-
-## Usage
-
-### Run all providers in parallel
-
-```bash
 npx playwright test
 ```
 
-### Run a specific provider
+Results populate `test-data/jobResults.json`. New postings are added on following runs; previously discovered jobs keep their status and notes.
 
-```bash
-# Provider sites
-npx playwright test tests/{provider}.spec.ts
+---
+
+## Architecture
+
+Each platform has a dedicated page object exposing a consistent surface: `searchPage()`, `getJobs()`, and where supported, `jobDetails()`. Tests are thin; they pick a provider, iterate the configured sites, and hand results to the deduplication layer.
+
 ```
-
-### Custom keyword search (local recruiter)
-
-```bash
-export SEARCH="software engineer"
-npx playwright test tests/R001Search.spec.ts
-unset SEARCH
-```
-
-If `SEARCH` is not set, the recruiter spec defaults to an IT-category search.
-
-### Validate CDP and webdriver fingerprint
-
-```bash
-npx playwright test tests/uaWebdriver.spec.ts --ui
-```
-
-Screenshots are saved to `test-data/screenshotNoNav.png` (navigator patch) and `test-data/screenshotCDP.png` (CDP session) for visual verification.
-
-### CI/CD mode (serial, with retries)
-
-```bash
-CI=true npx playwright test
+prospects/
+├── pages/
+│   ├── adpSearch.ts             # ADP Workforce Now
+│   ├── applitrack.ts            # Applitrack
+│   ├── atjSearch.ts             # ApplyToJob
+│   ├── schoolspring.ts          # SchoolSpring
+│   ├── eightfold.ts             # Generic Eightfold tenants
+│   ├── bisd.ts                  # Authenticated Eightfold
+│   └── localRecruiters/r001/    # Recruiter-specific search
+├── tests/
+│   ├── adp.spec.ts
+│   ├── applitrack.spec.ts
+│   ├── atj.spec.ts
+│   ├── schoolspring.spec.ts
+│   ├── eightfold.spec.ts
+│   ├── bisd.spec.ts             # serial, CDP-gated
+│   ├── r001.spec.ts
+│   └── uaWebdriver.spec.ts      # fingerprint validation
+├── classes/
+│   ├── utilities.ts             # job types, dedup, batch writes, site registry
+│   ├── specialContextPage.ts    # CDP attach + navigator.webdriver patch
+│   └── cdpValidator.ts          # CDP port health, Chrome auto-launch
+├── fixtures/
+│   └── bisd-auth.ts             # cached login session + CDP context
+├── test-data/
+│   ├── sites.json               # all configured employers
+│   ├── filters.json             # per-tenant Eightfold query params
+│   ├── jobResults.json          # persistent results store
+│   └── description/             # per-org enriched job details
+├── playwright.config.ts
+└── globalTeardown.ts
 ```
 
 ---
 
-## Configuration
+## Parallel execution without file contention
 
-### Adding job sites
+Concurrent provider runs are batched via `batchAppendJobs(siteId, jobs)` in `test-data/.batch/<org>.json`. `globalTeardown` runs `consolidateBatchWrites()`: it reads the batch file, consolidates them into the main store with ID-level deduplication, and removes the batch directory.
 
-Edit `test-data/sites.json`. Sites are grouped by category and each entry requires `id`, `org`, `URL`, and `Provider`:
+The result is order-independent and concurrency-safe.
 
+---
+
+## Three integration shapes
+
+**DOM scraping (ADP, Applitrack, ATJ, SchoolSpring).** Resilient locators against rendered pages. Applitrack and SchoolSpring detect the "no relevant categories" case and skip the site cleanly rather than failing the run.
+
+**Public JSON (Eightfold AI).** The `Eightfold` page object constructs queries against `/api/pcsx/search`, paginates by `start` offset until `totalCount` is reached, then fetches `/api/pcsx/position_details` for each result. Per-tenant configuration — subdomain, domain, filter parameters — stored in `test-data/filters.json`.
+
+**Authenticated JSON (BISD via Eightfold).** Same API family, behind a login wall and bot detection. Handled separately because the auth model and execution mode differ.
+
+---
+
+## CDP for sites that block automation
+
+BISD's career portal sits behind an Eightfold tenant with light, but active automation detection. Authentication and a running Chrome process via the Chrome DevTools Protocol allows access.
+
+`CDPValidator.isUnavailable()` checks whether CDP is available via port check and json check. If unavailable, a Chrome Debug respawn is attempted and the JSON endpoint is retried. Upon further failure, the BISD suite skips with `testInfo.skip()`.
+
+`SpecialContextPage` exposes two modes:
+
+- `cdpBrowser()` — attaches to the live Chrome instance and creates an isolated context inside it
+- `noNavigator()` — for lighter detection, creates a fresh context and patches `navigator.webdriver` out of the prototype chain at `addInitScript` time
+
+The BISD fixture (`fixtures/bisd-auth.ts`) caches the authenticated session at module scope, so all tests in the suite reuse the same login and run serially.
+
+---
+
+## Stateful job tracking
+
+`jobResults.json`
+
+```json
+{
+  "Juniper ISD": {
+    "Site": "Juniper ISD",
+    "URL": "https://apply.juniper.org",
+    "jobs": [
+      {
+        "id": "JOB123",
+        "title": "Network Engineer",
+        "link": "https://apply.juniper.org/careers/job/JOB123",
+        "status": "0",
+        "date": "2026-05-13",
+        "notes": ""
+      }
+    ]
+  }
+}
+```
+
+Eightfold tenants: Writes job details (department, location, work-site type, cleaned description) to `test-data/description/<org>.description.json`. 
+
+BISD Eightfold tenant: Additionally, each test accumulates only genuinely new IDs into an in-memory set, then a final `BISD Job Details` test fetches job details for that delta, writing `test-data/description/<org>.description.json`.
+
+---
+
+## What's in the registry
+
+`test-data/sites.json` example:
 ```json
 {
   "Private": [
@@ -139,132 +134,36 @@ Edit `test-data/sites.json`. Sites are grouped by category and each entry requir
 }
 ```
 
-Supported `Provider` values: `ADP`, `ATJ`, `schoolspring`, `applitrack`, `bisd`, `r001`
+---
 
-### Adding a new provider
+## Running it
 
-1. **Create a Page Object** in `pages/`:
+```bash
+# everything, in parallel
+npx playwright test
 
-```typescript
-import { Page, Locator } from '@playwright/test';
-import { Job, Utilities } from '@classes/utilities';
+# one provider
+npx playwright test tests/schoolspring.spec.ts
 
-export class NewProvider {
-    page: Page;
-    utils: Utilities;
-    id: string;
-    // define locators...
+# CI mode: serial, retries, no forbidden test.only
+CI=true npx playwright test
 
-    constructor(page: Page, id?: string) {
-        this.page = page;
-        this.utils = new Utilities();
-        this.id = id || '';
-        // initialize locators...
-    }
-
-    async searchPage() {
-        await this.page.goto(Utilities.URLS[this.id]);
-    }
-
-    async getJobs(): Promise<Job[]> {
-        // extract and return normalized jobs
-        return this.utils.normalizeJobs(rawJobs);
-    }
-}
+# custom keyword pass through the recruiter spec
+SEARCH="network administrator" npx playwright test tests/r001Search.spec.ts
 ```
 
-2. **Add a test spec** in `tests/`:
+BISD requires credentials in `.auth/.env`:
 
-```typescript
-import { test } from '@playwright/test';
-import { NewProvider } from '@pages/newProvider';
-import { Utilities } from '@classes/utilities';
-
-test.describe('New Provider', () => {
-    const sites = Utilities.getSitesByProvider('newprovider');
-    const utils = new Utilities();
-
-    for (const site of sites) {
-        test(`New Provider ${site.org}`, async ({ page }) => {
-            const provider = new NewProvider(page, site.id);
-            await provider.searchPage();
-            const jobs = await provider.getJobs();
-            if (site.id) await utils.batchAppendJobs(site.id, jobs);
-        });
-    }
-});
+```
+BISD_EMAIL=...
+BISD_PASSWORD=...
 ```
 
-3. **Add sites** to `test-data/sites.json` with the matching `Provider` value.
-
 ---
 
-## Job Results
+## In progress
 
-Results are written to `test-data/jobResults.json` and persist across runs. Each entry is keyed by organization name:
+- GitHub Actions workflow with a containerized Chrome for the CDP-gated suites — the current implementation assumes a local macOS Chrome path
+- Remote CDP deployment so the BISD suite can run unattended in CI rather than only on a developer machine
 
-```json
-{
-  "Example Organization": {
-    "Site": "Example Organization",
-    "URL": "https://example.com/careers",
-    "jobs": [
-      {
-        "id": "JOB123",
-        "title": "QA Automation Engineer",
-        "link": "https://example.com/careers/JOB123",
-        "status": "0",
-        "date": "2026-05-13",
-        "notes": ""
-      }
-    ]
-  }
-}
-```
-
-### Status values
-
-| Value | Meaning |
-|---|---|
-| `"0"` | New / not yet reviewed |
-| `"1"` | Applied |
-| `"2"` | Response received |
-| `"3"` | Interviewing |
-| `"4"` | Declined |
-
-Jobs already present in `jobResults.json` are never overwritten — their `status` and `notes` are preserved across subsequent runs.
-
----
-
-## How batch writes work
-
-Playwright's parallel execution means multiple tests can finish and attempt file writes simultaneously. Writing directly to `jobResults.json` from parallel workers would cause data races and corruption.
-
-Instead:
-
-1. Each test calls `batchAppendJobs()`, which writes to an isolated file in `test-data/.batch/<org>.json`
-2. After all tests complete, `globalTeardown` calls `consolidateBatchWrites()`, which reads all batch files, merges them into `jobResults.json` with deduplication, and cleans up the `.batch` directory
-
-This guarantees no data loss or file collisions regardless of how many workers are running.
-
----
-
-## CDP Integration
-
-Some sites (BISD) require a session logged in through a real browser, or actively detect and block headless automation. For these, the framework connects to a locally running Chrome instance via the Chrome Debug Protocol (CDP).
-
-`CDPValidator` checks port 9222 for an active CDP session. If unavailable, it attempts to launch Chrome with `--remote-debugging-port=9222`. Tests that depend on CDP skip gracefully if a connection cannot be established.
-
-`SpecialContextPage` provides two modes:
-- `noNavigator()` — creates a new browser context and patches `navigator.webdriver` out of the prototype chain at page initialization
-- `cdpBrowser()` — connects to the CDP endpoint and creates an isolated context on the live Chrome instance
-
----
-
-## Roadmap
-
-- [ ] Deploy self-hosted Chrome debug container via GitHub Actions
-- [x] Web dashboard for job tracking ([vibe-tracker](https://github.com/keithsecond/vibe-tracker))
-- [ ] Additional provider integrations
-- [ ] Email or notification alerts for new jobs
-- [ ] Job filtering and keyword scoring
+Companion project: [vibe-tracker](https://github.com/keithsecond/vibe-tracker), a web dashboard over the `jobResults.json` produced by this pipeline.
