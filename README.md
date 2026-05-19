@@ -112,9 +112,7 @@ The BISD fixture (`fixtures/bisd-auth.ts`) caches the authenticated session at m
 }
 ```
 
-Eightfold tenants + BISD: Writes job details (department, location, work-site type, cleaned description) to `test-data/description/<org>.description.json`.
-
-Additionally, each test accumulates only genuinely new IDs into an in-memory set, then a final `<org> Job Details` test fetches job details for that delta, writing `test-data/description/<org>.description.json`.
+Eightfold tenants + BISD: Each test accumulates only genuinely new IDs into an in-memory set, then writes job details (department, location, work-site type, cleaned description) to `test-data/description/<org>.description.json`.
 
 ---
 
@@ -165,5 +163,6 @@ BISD_PASSWORD=...
 
 - GitHub Actions workflow with a containerized Chrome for the CDP-gated suites — the current implementation assumes a local macOS Chrome path
 - Remote CDP deployment so the BISD suite can run unattended in CI rather than only on a developer machine
+- Bridge `jobResults.json` and `<org>.description.json` with [career-ops](https://github.com/santifer/career-ops)
 
 Companion project: [vibe-tracker](https://github.com/keithsecond/vibe-tracker), a web dashboard over the `jobResults.json` produced by this pipeline.
