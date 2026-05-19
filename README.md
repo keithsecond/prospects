@@ -74,7 +74,7 @@ The result is order-independent and concurrency-safe.
 
 ---
 
-## CDP for sites that block automation
+## CDP
 
 BISD's career portal sits behind an Eightfold tenant with light, but active automation detection. Authentication and a running Chrome process via the Chrome DevTools Protocol allows access.
 
@@ -112,9 +112,9 @@ The BISD fixture (`fixtures/bisd-auth.ts`) caches the authenticated session at m
 }
 ```
 
-Eightfold tenants: Writes job details (department, location, work-site type, cleaned description) to `test-data/description/<org>.description.json`. 
+Eightfold tenants + BISD: Writes job details (department, location, work-site type, cleaned description) to `test-data/description/<org>.description.json`.
 
-BISD Eightfold tenant: Additionally, each test accumulates only genuinely new IDs into an in-memory set, then a final `BISD Job Details` test fetches job details for that delta, writing `test-data/description/<org>.description.json`.
+Additionally, each test accumulates only genuinely new IDs into an in-memory set, then a final `<org> Job Details` test fetches job details for that delta, writing `test-data/description/<org>.description.json`.
 
 ---
 

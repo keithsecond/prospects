@@ -47,24 +47,23 @@ export class Eightfold {
             const url = this.buildUrl(params, start);
             const response = await this.page.goto(url);
             const json = await response?.json();
-
+            if (json.status !== 200) {
+                console.error(`API request failed with status: ${json.status}`);
+                return [];
+            }
             if (start === 0) {
                 totalCount = json.data.count;
-                console.log(`Eightfold ${this.domain}: ${totalCount} total positions`);
                 if (totalCount === 0) break;
             }
-
             const positions = json.data.positions;
             if (!positions.length) break;
-
             for (const pos of positions) {
                 rawJobs.push({
-                    id: String(pos.displayJobId),
+                    id: String(pos.id),
                     title: pos.name,
                     link: `${this.baseUrl}/careers?pid=${pos.id}`,
                 });
             }
-
             start += pageSize;
         }
         return this.utils.normalizeJobs(rawJobs);
@@ -96,21 +95,16 @@ export class Eightfold {
                 )
             ))
             : await Utilities.getSiteJobIds(siteIdOrJobs) as string[];
-
         const count = ids.length;
-        console.log(`Eightfold ${this.domain}: fetching details for ${count} positions`);
-
         for (let i = 0; i < count; i++) {
             const url = this.buildDetailsUrl(ids[i]);
             const response = await this.page.goto(url);
             const json = await response?.json();
-
-            if (!json.data.position) {
-                console.error(`No position data returned for id: ${ids[i]}`);
-                continue;
+            if (json.status !== 200) {
+                console.error(`API request failed with status: ${json.status}`);
+                return [];
             }
-
-            const pos = json.data.position;
+            const pos = json.data;
             rawDetails.push({
                 title: pos.name,
                 displayJobId: String(pos.displayJobId),
