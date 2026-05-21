@@ -147,7 +147,7 @@ npx playwright test tests/schoolspring.spec.ts
 CI=true npx playwright test
 
 # custom keyword pass through the recruiter spec
-SEARCH="network administrator" npx playwright test tests/r001Search.spec.ts
+SEARCH="network administrator" npx playwright test tests/r001.spec.ts
 ```
 
 BISD requires credentials in `.auth/.env`:

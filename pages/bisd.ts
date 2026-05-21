@@ -42,6 +42,10 @@ export class BISD {
         await this.submitButton.click();
         await this.userMenu.isVisible();
         await this.page.waitForLoadState('networkidle');
+        const currentUrl = this.page.url();
+        if (!currentUrl.includes('careerhub')) {
+            console.warn(currentUrl, 'Documenting in case login failed.');
+        }
     }
 
     buildJobsUrl(params: Record<string, string | string[]>, query = '', pageSize = 100): string {

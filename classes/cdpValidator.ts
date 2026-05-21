@@ -19,6 +19,7 @@ export class CDPValidator {
         if (this.isPortOpen() && (await this.isJsonEndpointValid())) {
             return false;
         }
+        console.warn('CDP is not available - launching.');
         this.launchChromeDebugger();
         await new Promise(resolve => setTimeout(resolve, 2000));
         if (!this.isPortOpen()) {
