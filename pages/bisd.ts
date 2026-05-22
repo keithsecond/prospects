@@ -44,7 +44,7 @@ export class BISD {
         await this.page.waitForLoadState('networkidle');
         const currentUrl = this.page.url();
         if (!currentUrl.includes('careerhub')) {
-            console.warn(currentUrl, 'Documenting in case login failed.');
+            console.warn(currentUrl, 'Documenting in case the login failed.');
         }
     }
 
