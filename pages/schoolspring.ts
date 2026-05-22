@@ -1,124 +1,108 @@
-import { Locator, Page } from '@playwright/test';
-import { Job, Utilities } from '@classes/utilities';
+import { Page } from '@playwright/test';
+import { Job, JobDetails, Utilities } from '@classes/utilities';
 
 export class SchoolSpring {
     page: Page;
     utils: Utilities;
     id: string;
-    closeButton: Locator;
-    moreButton: Locator;
-    container: Locator;
-    job: Locator;
-    titleCard: Locator;
-    jobIdContainer: Locator;
-    jobId: Locator;
-    dropdown: Locator;
-    adminExpand: Locator;
-    techCheckbox: Locator;
-    supportStaffExpand: Locator;
-    computerSupportCheckbox: Locator;
-    networkSupportCheckbox: Locator;
-    searchButton: Locator;
+    url: string;
+    baseUrl: string;
+    boardToken: string;
     noAdmin: boolean;
 
-    /**
-     * Creates a SchoolSpring page model.
-     * @param page Playwright page instance for browsing and actions.
-     * @param id Optional site ID used to look up the URL from Utilities.URLS.
-     */
     constructor(page: Page, id?: string) {
-        this.page = page; 
+        this.page = page;
         this.utils = new Utilities();
         this.id = id || '';
         this.noAdmin = false;
-        this.closeButton = page.getByRole('button', { name: 'Close' });
-        this.moreButton = page.getByRole('button', { name: 'More Jobs' });
-        this.container = page.locator('.job-list-panel');
-        this.job = this.container.locator('#joblist-div');
-        this.titleCard = page.locator('.card-title.h5');
-        this.jobIdContainer = page.locator('#jobDetails-desktop');
-        this.jobId = this.jobIdContainer.locator('#jobId-value');
-        this.dropdown = page.locator('.nestedmultiselect-container').first();
-        this.adminExpand = page.getByRole('button', {
-            name: 'expand Administration',
-        });
-        this.techCheckbox = page.getByRole('checkbox', { name: 'Technology' });
-        this.supportStaffExpand = page.getByRole('button', {
-             name: 'expand Support Staff'
-            });
-        this.computerSupportCheckbox = page.getByRole('checkbox', { name: 'Computer Support' });
-        this.networkSupportCheckbox = page.getByRole('checkbox', { name: 'Network Services' });
-        this.searchButton = page.getByRole('button', { name: 'Search' });
+        this.url = Utilities.URLS[this.id];
+        const match = this.url.match(/https:\/\/(.+?)\.schoolspring\.com/);
+        this.boardToken = match ? match[1] : '';
+        this.baseUrl = 'https://api.schoolspring.com';
     }
 
-    /**
-     * Loads the SchoolSpring site, applies the admin and technology filters,
-     * clicks Search, and then expands the "More Jobs" list until completed.
-     * If admin or tech filters are unavailable, sets noAdmin flag and returns early.
-     */
+    buildUrl(page = 1, size = 250): string {
+        const q = new URLSearchParams();
+        q.set('domainName', `${this.boardToken}.schoolspring.com`);
+        q.set('category', '17,171,172,224');
+        q.set('jobtype', '1');
+        q.set('page', String(page));
+        q.set('size', String(size));
+        q.set('sortDateAscending', 'false');
+        return `${this.baseUrl}/api/Jobs/GetPagedJobsWithSearch?${q.toString()}`;
+    }
+
+    buildDetailsUrl(jobId: string): string {
+        const q = new URLSearchParams();
+        q.set('domainName', `${this.boardToken}.schoolspring.com`);
+        return `${this.baseUrl}/api/Jobs/${jobId}?${q.toString()}`;
+    }
+
     async searchPage() {
-        const url = Utilities.URLS[this.id];
-        await this.page.goto(url);
-        await this.closeButton.click();
-        await this.dropdown.click();
-        const adminExists = await this.adminExpand.count() > 0;
-        const supportExists = await this.supportStaffExpand.count() > 0;
-        if (!adminExists && !supportExists) {
-            return (this.noAdmin = true);
+        const url = this.buildUrl();
+        const response = await this.page.goto(url);
+        const data = await response?.json();
+        if (!data?.success || !data.value?.jobsList) {
+            this.noAdmin = true;
+            return;
         }
-        if (await this.adminExpand.isVisible()) {
-            await this.adminExpand.click();
-        }
-        if (await this.supportStaffExpand.isVisible()) {
-            await this.supportStaffExpand.click();
-        }
-        const techExists = await this.techCheckbox.count() > 0;
-        const computerExists = await this.computerSupportCheckbox.count() > 0;
-        const networkExists = await this.networkSupportCheckbox.count() > 0;
-        if (!techExists && !computerExists && !networkExists) {
-            return (this.noAdmin = true);
-        }
-        if (techExists) {
-            await this.techCheckbox.check()
-        }
-        if (computerExists) {
-            await this.computerSupportCheckbox.check();
-        }
-        if (networkExists) {
-            await this.networkSupportCheckbox.check();
-        }
-        await this.searchButton.click();
-        await this.page.waitForTimeout(500);
-        while (await this.moreButton.isVisible()) {
-            await this.moreButton.click();
-            await this.page.waitForTimeout(500);
+        if (data.value.jobsList.length === 0) {
+            this.noAdmin = true;
         }
     }
 
-    /**
-     * Gathers all jobs from the currently loaded search results.
-     *
-     * @returns Promise<Job[]> normalized job list with id, title, and link.
-     */
     async getJobs(): Promise<Job[]> {
-        const foundJobs = this.job;
-        const count = await foundJobs.count();
-        const rawJobs = [] as Array<{
-            id: string;
-            title: string;
-            link: string;
-        }>;
-        for (let i = 0; i < count; i++) {
-            await this.dropdown.click();
-            const jobWeb = foundJobs.nth(i);
-            await jobWeb.click();
-            const title = await this.titleCard.nth(i).innerText();
-            const id = await this.jobId.innerText();
-            const url = this.page.url();
-            const link = `${url}?jobid=${id}`;
-            if (!id) continue;
-            rawJobs.push({ id, title, link });
+        const url = this.buildUrl();
+        const response = await this.page.goto(url);
+        const data = await response?.json() as any;
+        if (!data?.success || !data.value?.jobsList) {
+            return [];
         }
+        const rawJobs = data.value.jobsList.map((job: any) => ({
+            id: String(job.jobId),
+            title: job.title,
+            link: `${this.url}/?jobid=${job.jobId}`,
+        }));
         return this.utils.normalizeJobs(rawJobs);
     }
+
+    async jobDetails(jobs: Job[]): Promise<JobDetails[]> {
+        const rawDetails = [] as Array<{
+            title: string;
+            displayJobId: string;
+            department: string;
+            description: string;
+            entityId: string;
+        }>;
+
+        for (const job of jobs) {
+            const url = this.buildDetailsUrl(job.id);
+            const response = await this.page.goto(url);
+            const data = await response?.json() as any;
+            if (!data?.success || !data.value?.jobInfo) {
+                continue;
+            }
+            const jobInfo = data.value.jobInfo;
+            rawDetails.push({
+                title: jobInfo.jobTitle,
+                displayJobId: jobInfo.externalJobCode,
+                department: jobInfo.contactTitle + jobInfo.contactAddress1 + jobInfo.contactEmail + jobInfo.contactPhone,
+                description: convertHtml(jobInfo.jobDescription || ''),
+                entityId: jobInfo.jobId,
+            });
+        }
+        return rawDetails;
+    }
+}
+
+function convertHtml(htmlString: string): string {
+    return htmlString
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/p>/gi, '\n')
+        .replace(/&#13;/gi, '\n')
+        .replace(/<[^>]*>/g, '')
+        .replace(/&ndash;/gi, ' - ')
+        .replace(/&amp;/gi, '&')
+        .replace(/&nbsp;/g, '')
+        .trim();
 }

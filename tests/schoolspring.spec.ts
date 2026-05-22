@@ -1,20 +1,32 @@
 import { test } from '@playwright/test';
 import { SchoolSpring } from '@pages/schoolspring';
-import { Utilities } from '@classes/utilities';
+import { Utilities, Job } from '@classes/utilities';
 
-test.describe('SchoolSpring Workboards', () => {
+
+test.describe('SchoolSpring', () => {
     const schoolspringSites = Utilities.getSitesByProvider('schoolspring');
     const utils = new Utilities();
+    let schoolSpringJobs: Job[] = [];
+    test.describe.configure({ mode: 'serial' });
 
     for (const site of schoolspringSites) {
-        test(`SchoolSpring ${site.org}`, async ({ page }, testInfo) => {
-            const schoolspring = new SchoolSpring(page, site.id);
-            await schoolspring.searchPage();
-            testInfo.skip(schoolspring.noAdmin, 'No tech jobs');
-            const jobs = await schoolspring.getJobs();
+        test(`${site.org} Jobs`, async ({ page }, testInfo) => {
+            const schoolSpring = new SchoolSpring(page, site.id);
+            await schoolSpring.searchPage();
+            testInfo.skip(schoolSpring.noAdmin, 'No tech jobs');
+            const jobs = await schoolSpring.getJobs();
+            schoolSpringJobs.push(...jobs);
             if (site.id !== undefined) {
                 await utils.batchAppendJobs(site.id, jobs);
             }
+        });
+
+        test(`${site.org} Job Details`, async ({ page }, testInfo) => {
+            const schoolSpring = new SchoolSpring(page, site.id as string);
+            await schoolSpring.searchPage();
+            testInfo.skip(schoolSpring.noAdmin, 'No tech jobs');
+            const details = await schoolSpring.jobDetails(schoolSpringJobs);
+            await utils.writeDetails(site.id as string, details);
         });
     }
 });
