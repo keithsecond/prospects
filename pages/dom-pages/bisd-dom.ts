@@ -23,7 +23,6 @@ export class BISD {
     jobUrl: string;
     description: Locator;
     department: Locator;
-    displayJobId: Locator;
 
     constructor(
         page: Page,
@@ -49,7 +48,6 @@ export class BISD {
         this.jobUrl = page.url();
         this.description = page.locator(".position-job-description")
         this.department = page.locator('.position-department')
-        this.displayJobId = page.locator('.position-displayJobId')
     }
 
     async searchPage() {
