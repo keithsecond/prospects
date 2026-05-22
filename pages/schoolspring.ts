@@ -86,7 +86,7 @@ export class SchoolSpring {
             rawDetails.push({
                 title: jobInfo.jobTitle,
                 displayJobId: jobInfo.externalJobCode,
-                department: jobInfo.contactTitle + jobInfo.contactAddress1 + jobInfo.contactEmail + jobInfo.contactPhone,
+                department: `${jobInfo.contactTitle} ${jobInfo.contactAddress1} ${jobInfo.contactEmail} ${jobInfo.contactPhone}`,
                 description: convertHtml(jobInfo.jobDescription || ''),
                 entityId: jobInfo.jobId,
             });
