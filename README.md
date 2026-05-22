@@ -23,14 +23,16 @@ Each platform has a dedicated page object exposing a consistent surface: `search
 ```
 prospects/
 ├── pages/
-│   ├── adpSearch.ts             # ADP Workforce Now
+│   ├── dom-pages/               # Archived DOM pages
+│   ├── adpSearch.ts             # ADP
 │   ├── applitrack.ts            # Applitrack
 │   ├── atjSearch.ts             # ApplyToJob
-│   ├── schoolspring.ts          # SchoolSpring
-│   ├── eightfold.ts             # Generic Eightfold tenants
-│   ├── bisd.ts                  # Authenticated Eightfold
+│   ├── schoolspring.ts          # SchoolSpring (API)
+│   ├── eightfold.ts             # Eightfold tenants (API)
+│   ├── bisd.ts                  # Authenticated Eightfold (API)
 │   └── localRecruiters/r001/    # Recruiter-specific search
 ├── tests/
+│   ├── dom-tests/               # Archived DOM tests
 │   ├── adp.spec.ts
 │   ├── applitrack.spec.ts
 │   ├── atj.spec.ts
@@ -44,6 +46,7 @@ prospects/
 │   ├── specialContextPage.ts    # CDP attach + navigator.webdriver patch
 │   └── cdpValidator.ts          # CDP port health, Chrome auto-launch
 ├── fixtures/
+│   ├── dom-fixtures/            # Archived DOM fixtures
 │   └── bisd-auth.ts             # cached login session + CDP context
 ├── test-data/
 │   ├── sites.json               # all configured employers
@@ -66,9 +69,9 @@ The result is order-independent and concurrency-safe.
 
 ## Three integration shapes
 
-**DOM scraping (ADP, Applitrack, ATJ, SchoolSpring).** Resilient locators against rendered pages. Applitrack and SchoolSpring detect the "no relevant categories" case and skip the site cleanly rather than failing the run.
+**DOM scraping (ADP, Applitrack, ATJ).** Resilient locators against rendered pages. Applitrack and SchoolSpring detect the "no relevant categories" case and skip the site cleanly rather than failing the run.
 
-**Public JSON (Eightfold AI).** The `Eightfold` page object constructs queries against `/api/pcsx/search`, paginates by `start` offset until `totalCount` is reached, then fetches `/api/pcsx/position_details` for each result. Per-tenant configuration — subdomain, domain, filter parameters — stored in `test-data/filters.json`.
+**Public JSON (Eightfold AI, SchoolSpring).** The `Eightfold` page object constructs queries against `/api/pcsx/search`, paginates by `start` offset until `totalCount` is reached, then fetches `/api/pcsx/position_details` for each result. Per-tenant configuration — subdomain, domain, filter parameters — stored in `test-data/filters.json`.
 
 **Authenticated JSON (BISD via Eightfold).** Same API family, behind a login wall and bot detection. Handled separately because the auth model and execution mode differ.
 
@@ -86,6 +89,14 @@ BISD's career portal sits behind an Eightfold tenant with light, but active auto
 - `noNavigator()` — for lighter detection, creates a fresh context and patches `navigator.webdriver` out of the prototype chain at `addInitScript` time
 
 The BISD fixture (`fixtures/bisd-auth.ts`) caches the authenticated session at module scope, so all tests in the suite reuse the same login and run serially.
+
+---
+
+## DOM to API Migration:
+
+Providers initially used DOM scraping for resilience. Discovery of public APIs (SchoolSpring, BISD/Eightfold) showed 20-30x speed improvements with no reliability tradeoff.
+
+DOM implementations are archived in pages/dom-pages/, fixtures/dom-fixtures, and tests/dom-tests/ and excluded via `testIgnore: '**/dom-tests/**' in playwright.config.ts`
 
 ---
 
@@ -161,7 +172,7 @@ BISD_PASSWORD=...
 
 ## In progress
 
-- GitHub Actions workflow with a containerized Chrome for the CDP-gated suites — the current implementation assumes a local macOS Chrome path
+- GitHub Actions workflow with a [containerized Chrome](https://github.com/keithsecond/headed-chrome-cdp-mac) for the CDP-gated suites — the current implementation assumes a local macOS Chrome path
 - Remote CDP deployment so the BISD suite can run unattended in CI rather than only on a developer machine
 - Bridge `jobResults.json` and `<org>.description.json` with [career-ops](https://github.com/santifer/career-ops)
 
