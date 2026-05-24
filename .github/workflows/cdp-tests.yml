@@ -1,0 +1,208 @@
+name: CDP Tests (uaWebdriver + BISD)
+
+on:
+  workflow_dispatch:
+
+# Only one run at a time — avoids concurrent push conflicts to prospects-data.
+concurrency:
+  group: cdp-tests
+  cancel-in-progress: false
+
+jobs:
+  cdp-tests:
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 30
+
+    env:
+      IMAGE_TAG: chrome-cdp:local
+      CONTAINER_NAME: chrome-cdp
+      CHROME_CDP_REPO: keithsecond/headed-chrome-cdp-mac
+      CHROME_CDP_REF: main
+      DATA_REPO: keithsecond/prospects-data
+      DATA_REF: main
+
+    steps:
+      - name: Checkout prospects repo
+        uses: actions/checkout@v4
+        with:
+          path: prospects
+
+      - name: Checkout chrome-cdp-mac repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.CHROME_CDP_REPO }}
+          ref: ${{ env.CHROME_CDP_REF }}
+          path: chrome-cdp-mac
+
+      - name: Checkout prospects-data repo
+        # Private data repo containing test-data/ content.
+        # PAT is fine-grained, scoped to this repo only, with contents:read/write.
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.DATA_REPO }}
+          ref: ${{ env.DATA_REF }}
+          token: ${{ secrets.DATA_REPO_PAT }}
+          path: prospects/test-data
+          persist-credentials: true
+
+      - name: Sanity check — Docker Desktop reachable
+        run: docker info > /dev/null
+
+      - name: Build chrome-cdp image
+        working-directory: chrome-cdp-mac
+        run: docker build -t "$IMAGE_TAG" .
+
+      - name: Stage seccomp profile in HOME
+        working-directory: chrome-cdp-mac
+        run: cp seccomp/chrome.json "$HOME/chrome.json"
+
+      - name: Ensure XQuartz is running
+        run: |
+          if ! pgrep -x Xquartz > /dev/null; then
+            open -a XQuartz
+            for i in {1..20}; do
+              if netstat -an -p tcp | awk '$4 ~ /\.6000$/ && $6 == "LISTEN" {found=1} END {exit !found}'; then
+                break
+              fi
+              sleep 1
+            done
+          fi
+          if ! netstat -an -p tcp | awk '$4 ~ /\.6000$/ && $6 == "LISTEN" {found=1} END {exit !found}'; then
+            echo "XQuartz never started listening on :6000" >&2
+            exit 1
+          fi
+
+      - name: Allow X connections from this host
+        run: /opt/X11/bin/xhost + > /dev/null
+
+      - name: Remove any stale chrome-cdp container
+        run: docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
+
+      - name: Ensure host profile dir exists
+        run: mkdir -p "$HOME/chrome-cdp-profile"
+
+      - name: Launch chrome-cdp container
+        run: |
+          INT=$(route -n get default 2>/dev/null | awk '/interface:/ {print $2}')
+          IP=$(ifconfig "$INT" 2>/dev/null | awk '$1=="inet" {print $2}')
+          if [ -z "$IP" ]; then
+            echo "Could not determine host IP" >&2
+            exit 1
+          fi
+          echo "Using $INT -> $IP"
+          docker run -d \
+            --name "$CONTAINER_NAME" \
+            -p 127.0.0.1:9222:9222 \
+            -e DISPLAY="$IP:0" \
+            -v /tmp/.X11-unix:/tmp/.X11-unix \
+            -v "$HOME/chrome-cdp-profile:/data" \
+            --security-opt seccomp="$HOME/chrome.json" \
+            --shm-size=2g \
+            "$IMAGE_TAG"
+
+      - name: Wait for CDP endpoint
+        run: |
+          for i in {1..30}; do
+            if curl -sf http://127.0.0.1:9222/json/version > /dev/null; then
+              echo "CDP ready:"
+              curl -s http://127.0.0.1:9222/json/version
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "CDP never responded" >&2
+          docker logs "$CONTAINER_NAME" >&2
+          exit 1
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: prospects/package-lock.json
+
+      - name: Install dependencies
+        working-directory: prospects
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        working-directory: prospects
+        run: npx playwright install chromium
+
+      - name: Write BISD credentials
+        working-directory: prospects
+        env:
+          BISD_EMAIL: ${{ secrets.BISD_EMAIL }}
+          BISD_PASSWORD: ${{ secrets.BISD_PASSWORD }}
+        run: |
+          mkdir -p .auth
+          {
+            echo "BISD_EMAIL=$BISD_EMAIL"
+            echo "BISD_PASSWORD=$BISD_PASSWORD"
+          } > .auth/.env
+
+      - name: Run uaWebdriver tests
+        working-directory: prospects
+        env:
+          CI: 'true'
+        run: npx playwright test tests/uaWebdriver.spec.ts
+
+      - name: Run BISD tests
+        working-directory: prospects
+        env:
+          CI: 'true'
+        run: npx playwright test tests/bisd.spec.ts
+
+      - name: Show container logs on failure
+        if: failure()
+        run: docker logs "$CONTAINER_NAME" || true
+
+      - name: Commit updated test-data to prospects-data
+        # Pushes any changes Playwright produced (new jobs, updated descriptions)
+        # back to the private data repo. Only runs on success so a failed/partial
+        # run can't poison the data store.
+        if: success()
+        working-directory: prospects/test-data
+        run: |
+          git config user.email "ci@prospects.local"
+          git config user.name "Prospects CI"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No test-data changes to commit"
+            exit 0
+          fi
+          git commit -m "Update from CI run ${{ github.run_id }}"
+          # Retry push a few times in case of races
+          for i in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            echo "Push failed (attempt $i) — rebasing and retrying..."
+            git pull --rebase
+            sleep $((RANDOM % 5 + 1))
+          done
+          echo "Failed to push test-data updates after 3 attempts" >&2
+          exit 1
+
+      - name: Upload screenshots and Playwright reports
+        # Per-run diagnostics. Kept as workflow artifacts (not in prospects-data)
+        # because they have no value beyond debugging a specific run.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-diagnostics-${{ github.run_id }}
+          path: |
+            prospects/test-data/screenshot*.png
+            prospects/test-results/**
+            prospects/playwright-report/**
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Cleanup container
+        if: always()
+        run: docker rm -f "$CONTAINER_NAME" || true
+
+      - name: Cleanup credentials
+        if: always()
+        working-directory: prospects
+        run: rm -f .auth/.env
