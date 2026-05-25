@@ -87,7 +87,7 @@ jobs:
             echo "Could not determine host IP" >&2
             exit 1
           fi
-          echo "Using $INT -> $IP"
+          echo "Using $INT"
           docker run -d \
             --name "$CONTAINER_NAME" \
             -p 127.0.0.1:9222:9222 \
