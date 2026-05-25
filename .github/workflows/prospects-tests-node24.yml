@@ -14,6 +14,7 @@ jobs:
     timeout-minutes: 45
 
     env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
       IMAGE_TAG: chrome-cdp:local
       CONTAINER_NAME: chrome-cdp
       CHROME_CDP_REPO: keithsecond/headed-chrome-cdp-mac
