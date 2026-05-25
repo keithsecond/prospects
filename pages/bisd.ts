@@ -40,16 +40,10 @@ export class BISD {
         await this.usernameButton.click();
         await this.password.fill(password);
         await this.submitButton.click();
-/*         await this.userMenu.isVisible();
-        await this.page.waitForLoadState('networkidle');
-        const currentUrl = this.page.url(); */
         await this.page.waitForURL(
             url => url.href.includes('careerhub'),
             { timeout: 30000 }
         );
-/*         if (!currentUrl.('careerhub')) {
-            console.warn(currentUrl, 'Documenting in case the login failed.');
-        } */
     }
 
     buildJobsUrl(params: Record<string, string | string[]>, query = '', pageSize = 100): string {
