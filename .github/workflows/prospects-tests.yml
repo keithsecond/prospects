@@ -139,10 +139,11 @@ jobs:
             echo "BISD_PASSWORD=$BISD_PASSWORD"
           } > .auth/.env
 
-      - name: Run all tests
-        # Single Playwright invocation runs every spec in tests/ matching the
-        # chromium project's testMatch (excludes dom-tests/**). globalTeardown
-        # consolidates batch writes once at the end.
+      - name: Run all tests (parallel + CDP in one invocation)
+        # Single Playwright invocation runs both projects:
+        # 1. parallel-tests (ADP, Applitrack, ATJ, SchoolSpring, Eightfold, R001)
+        # 2. cdp-tests (BISD + uaWebdriver)
+        # globalTeardown runs once at the end, consolidating all batch writes
         working-directory: prospects
         env:
           CI: 'true'

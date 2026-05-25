@@ -10,73 +10,62 @@ const upworkAuthFile = path.join(__dirname, '.auth', 'upwork-user.json');
 /* eslint-enable @typescript-eslint/no-unused-vars */
 
 /**
- * See https://playwright.dev/docs/test-configuration.
+ * Playwright config with two projects:
+ *
+ * 1. parallel-tests: All specs except bisd.spec.ts and uaWebdriver.spec.ts
+ *    - ADP, Applitrack, ATJ, SchoolSpring, Eightfold, R001
+ *    - Can run in parallel (multiple workers)
+ *    - No CDP requirement
+ *
+ * 2. cdp-tests: Only bisd.spec.ts and uaWebdriver.spec.ts
+ *    - Requires Chrome DevTools Protocol on port 9222
+ *    - Must run serially (1 worker) due to shared auth state
+ *    - Requires BISD_EMAIL and BISD_PASSWORD
+ *
+ * Usage:
+ *   npx playwright test                          # Runs both projects
+ *   npx playwright test --project=parallel-tests # Runs only parallel tests (fast)
+ *   npx playwright test --project=cdp-tests      # Runs only CDP tests (requires Chrome on 9222)
  */
 export default defineConfig({
     testDir: './tests',
     globalTeardown: './globalTeardown.ts',
-    /* Run tests in files in parallel */
     fullyParallel: true,
-    /* Fail the build on CI if you accidentally left test.only in the source code. */
     forbidOnly: !!process.env.CI,
-    /* Retry on CI only */
     retries: process.env.CI ? 2 : 0,
-    /* Opt out of parallel tests on CI. */
-    workers: process.env.CI ? 1 : undefined,
-    /* Reporter to use. See https://playwright.dev/docs/test-reporters */
     reporter: 'list',
-    /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
     use: {
         ignoreHTTPSErrors: true,
         trace: 'on-first-retry',
         screenshot: 'only-on-failure',
         video: { mode: 'retain-on-failure' },
-        contextOptions: { userAgent:  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36" },
+        contextOptions: {
+            userAgent:
+                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36',
+        },
     },
 
-    /* Configure projects for major browsers */
     projects: [
         {
-            name: 'chromium',
+            name: 'parallel-tests',
             use: { ...devices['Desktop Chrome'] },
-            testIgnore: '**/dom-tests/**',
+            testMatch: '**/*.spec.ts',
+            testIgnore: [
+                '**/dom-tests/**',
+                '**/bisd.spec.ts',
+                '**/uaWebdriver.spec.ts',
+            ],
+            workers: process.env.CI ? 4 : undefined,
         },
-
-        // {
-        //   name: 'firefox',
-        //   use: { ...devices['Desktop Firefox'] },
-        // },
-
-        // {
-        //   name: 'webkit',
-        //   use: { ...devices['Desktop Safari'] },
-        // },
-
-        /* Test against mobile viewports. */
-        // {
-        //   name: 'Mobile Chrome',
-        //   use: { ...devices['Pixel 5'] },
-        // },
-        // {
-        //   name: 'Mobile Safari',
-        //   use: { ...devices['iPhone 12'] },
-        // },
-
-    /* Test against branded browsers. */
-    // {
-    //   name: 'Microsoft Edge',
-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    // },
-    // {
-    //   name: 'Google Chrome',
-    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    // },
+        {
+            name: 'cdp-tests',
+            use: { ...devices['Desktop Chrome'] },
+            testMatch: ['**/bisd.spec.ts', '**/uaWebdriver.spec.ts'],
+            // CDP tests must run serially because:
+            // 1. bisd-auth.ts maintains a module-scoped cached login session
+            // 2. All tests connect to a single Chrome instance on port 9222
+            // 3. Multiple workers would contend on auth state and CDP connection
+            workers: 1,
+        },
     ],
-
-    /* Run your local dev server before starting the tests */
-    // webServer: {
-    //   command: 'npm run start',
-    //   url: 'http://localhost:3000',
-    //   reuseExistingServer: !process.env.CI,
-    // },
 });
