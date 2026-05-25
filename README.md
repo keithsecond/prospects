@@ -172,7 +172,7 @@ BISD_PASSWORD=...
 
 ## In progress
 
-- GitHub Actions workflow with a [containerized Chrome](https://github.com/keithsecond/headed-chrome-cdp-mac) for the CDP-gated suites — the current implementation assumes a local macOS Chrome path
+- [x] GitHub Actions workflow with a [containerized Chrome](https://github.com/keithsecond/headed-chrome-cdp-mac) for the CDP-gated suites — the current implementation assumes a local macOS Chrome path
 - Remote CDP deployment so the BISD suite can run unattended in CI rather than only on a developer machine
 - Bridge `jobResults.json` and `<org>.description.json` with [career-ops](https://github.com/santifer/career-ops)
 

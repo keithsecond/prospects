@@ -6,8 +6,8 @@ import { Utilities, Job } from '@classes/utilities';
 test.describe('SchoolSpring', () => {
     const schoolspringSites = Utilities.getSitesByProvider('schoolspring');
     const utils = new Utilities();
-    let schoolSpringJobs: Job[] = [];
-    test.describe.configure({ mode: 'serial' });
+    let ssJobs: Job[] = [];
+    let existingJobIds = new Set<string>();
 
     for (const site of schoolspringSites) {
         test(`${site.org} Jobs`, async ({ page }, testInfo) => {
@@ -15,18 +15,20 @@ test.describe('SchoolSpring', () => {
             await schoolSpring.searchPage();
             testInfo.skip(schoolSpring.noAdmin, 'No tech jobs');
             const jobs = await schoolSpring.getJobs();
-            schoolSpringJobs.push(...jobs);
+            const newJobs: Job[] = [];
+            for (const job of jobs) {
+                if (!existingJobIds.has(job.id)) {
+                    existingJobIds.add(job.id);
+                    newJobs.push(job);
+                }
+            }
+            ssJobs.push(...newJobs);
+
+            const details = await schoolSpring.jobDetails(ssJobs);
+            await utils.writeDetails(site.id as string, details);
             if (site.id !== undefined) {
                 await utils.batchAppendJobs(site.id, jobs);
             }
-        });
-
-        test(`${site.org} Job Details`, async ({ page }, testInfo) => {
-            const schoolSpring = new SchoolSpring(page, site.id as string);
-            await schoolSpring.searchPage();
-            testInfo.skip(schoolSpring.noAdmin, 'No tech jobs');
-            const details = await schoolSpring.jobDetails(schoolSpringJobs);
-            await utils.writeDetails(site.id as string, details);
         });
     }
 });

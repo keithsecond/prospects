@@ -6,7 +6,6 @@ import filters from '../test-data/filters.json';
 const utils = new Utilities();
 let efJobs: Job[] = [];
 let existingJobIds = new Set<string>();
-test.describe.configure({ mode: 'serial' });
 
 for (const [siteId, site] of Object.entries(filters)) {
     test.beforeAll( async ({}) => {
@@ -28,12 +27,8 @@ for (const [siteId, site] of Object.entries(filters)) {
             }
         }
         efJobs.push(...newJobs);
-        await utils.batchAppendJobs(siteId, jobs);
-    });
-
-    test(`${site.org} Job Details`, async ({ page }) => {
-        const ef = new Eightfold(page, site.subdomain, site.domain);
         const details = await ef.jobDetails(efJobs);
         await utils.writeDetails(siteId, details);
+        await utils.batchAppendJobs(siteId, jobs);
     });
 }
