@@ -24,7 +24,7 @@ Each platform has a dedicated page object exposing a consistent surface: `search
 prospects/
 ├── pages/
 │   ├── dom-pages/               # Archived DOM pages
-│   ├── adpSearch.ts             # ADP
+│   ├── adp.ts                   # ADP
 │   ├── applitrack.ts            # Applitrack
 │   ├── atjSearch.ts             # ApplyToJob
 │   ├── schoolspring.ts          # SchoolSpring (API)
@@ -69,9 +69,9 @@ The result is order-independent and concurrency-safe.
 
 ## Three integration shapes
 
-**DOM scraping (ADP, Applitrack, ATJ).** Resilient locators against rendered pages. Applitrack and SchoolSpring detect the "no relevant categories" case and skip the site cleanly rather than failing the run.
+**DOM scraping (Applitrack, ATJ).** Resilient locators against rendered pages. Applitrack and SchoolSpring detect the "no relevant categories" case and skip the site cleanly rather than failing the run.
 
-**Public JSON (Eightfold AI, SchoolSpring).** The `Eightfold` page object constructs queries against `/api/pcsx/search`, paginates by `start` offset until `totalCount` is reached, then fetches `/api/pcsx/position_details` for each result. Per-tenant configuration — subdomain, domain, filter parameters — stored in `test-data/filters.json`.
+**Public JSON (Eightfold AI, SchoolSpring, ADP).** The `Eightfold` page object constructs queries against `/api/pcsx/search`, paginates by `start` offset until `totalCount` is reached, then fetches `/api/pcsx/position_details` for each result. Per-tenant configuration — subdomain, domain, filter parameters — stored in `test-data/filters.json`.
 
 **Authenticated JSON (BISD via Eightfold).** Same API family, behind a login wall and bot detection. Handled separately because the auth model and execution mode differ.
 
@@ -79,7 +79,7 @@ The result is order-independent and concurrency-safe.
 
 ## CDP
 
-BISD's career portal sits behind an Eightfold tenant with light, but active automation detection. Authentication and a running Chrome process via the Chrome DevTools Protocol allows access.
+BISD's career portal sits behind an Eightfold tenant with light, but active, automation detection. Authentication and a running Chrome process via the Chrome DevTools Protocol allows access.
 
 `CDPValidator.isUnavailable()` checks whether CDP is available via port check and json check. If unavailable, a Chrome Debug respawn is attempted and the JSON endpoint is retried. Upon further failure, the BISD suite skips with `testInfo.skip()`.
 
@@ -123,7 +123,7 @@ DOM implementations are archived in pages/dom-pages/, fixtures/dom-fixtures, and
 }
 ```
 
-Eightfold tenants + BISD: Each test accumulates only genuinely new IDs into an in-memory set, then writes job details (department, location, work-site type, cleaned description) to `test-data/description/<org>.description.json`.
+Most tests accumulates only genuinely new IDs into an in-memory set, then writes job details (department, location, work-site type, cleaned description) to `test-data/description/<org>.description.json`.
 
 ---
 
@@ -173,7 +173,8 @@ BISD_PASSWORD=...
 ## In progress
 
 - [x] GitHub Actions workflow with a [containerized Chrome](https://github.com/keithsecond/headed-chrome-cdp-mac) for the CDP-gated suites — the current implementation assumes a local macOS Chrome path
-- Remote CDP deployment so the BISD suite can run unattended in CI rather than only on a developer machine
 - Bridge `jobResults.json` and `<org>.description.json` with [career-ops](https://github.com/santifer/career-ops)
 
-Companion project: [vibe-tracker](https://github.com/keithsecond/vibe-tracker), a web dashboard over the `jobResults.json` produced by this pipeline.
+Companion projects: 
+- [headed-chrome-cdp-mac](https://github.com/keithsecond/headed-chrome-cdp-mac), a Dockerfile and support scripts for headed Chrome CDP on macOS
+- [vibe-tracker](https://github.com/keithsecond/vibe-tracker), a web dashboard over the `jobResults.json` produced by this pipeline.
