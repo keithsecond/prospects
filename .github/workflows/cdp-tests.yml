@@ -72,8 +72,6 @@ jobs:
             exit 1
           fi
 
-      - name: Allow X connections from this host
-        run: /opt/X11/bin/xhost + > /dev/null
 
       - name: Remove any stale chrome-cdp container
         run: docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
@@ -90,6 +88,7 @@ jobs:
             exit 1
           fi
           echo "Using $INT"
+          xhost +127.0.0.1 $IP > /dev/null
           docker run -d \
             --name "$CONTAINER_NAME" \
             -p 127.0.0.1:9222:9222 \
