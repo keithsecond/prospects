@@ -14,7 +14,7 @@ test.describe('BISD', () => {
     test.beforeAll( "CDP", async ({}, testInfo) => {
         noCdp = await CDPValidator.isUnavailable();
         testInfo.skip(noCdp, 'No CDP connection available');
-        const persistedIds = await Utilities.getSiteJobIds('I001') as string[];
+        const persistedIds = await Utilities.getSiteJobIds('I001');
         for (const id of persistedIds) {
             existingJobIds.add(id);
         }

@@ -117,6 +117,6 @@ export class BISD {
             rawDetails.push({ title, displayJobId, department, description, entityId });
         }
         await this.utils.writeDetails("I001", rawDetails);
-        return this.utils.normalizeJobs(rawJobs);
+        return Utilities.normalizeJobs(rawJobs);
     }
 }

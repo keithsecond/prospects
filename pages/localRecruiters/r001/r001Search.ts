@@ -3,7 +3,6 @@ import { Job, Utilities } from '@classes/utilities';
 
 export class R001 {
     page: Page;
-    utils: Utilities;
     url: string;
     city: string;
     jobType: string;
@@ -21,7 +20,6 @@ export class R001 {
         page: Page, 
     ) {
         this.page = page;
-        this.utils = new Utilities();
         this.url = Utilities.URLS.R001 + '/index.smpl?arg=jb_search';
         this.city = 'Houston, TX';
         this.jobType = 'Information Technology';
@@ -79,6 +77,6 @@ export class R001 {
             if (!id || !title) continue;
             rawJobs.push({ id, title, link });
         }
-        return this.utils.normalizeJobs(rawJobs);
+        return Utilities.normalizeJobs(rawJobs);
     }
 }

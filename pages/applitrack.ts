@@ -3,7 +3,6 @@ import { Job, Utilities } from '@classes/utilities';
 
 export class Applitrack {
     page: Page;
-    utils: Utilities;
     id: string;
     noResults: Locator;
     job: Locator;
@@ -18,7 +17,6 @@ export class Applitrack {
      */
     constructor(page: Page, id?: string) {
         this.page = page; 
-        this.utils = new Utilities();
         this.id = id || '';
         this.noAdmin = false;
         this.noResults = page.locator('.normal', {hasText: ' (no results)'})
@@ -57,6 +55,6 @@ export class Applitrack {
             if (!id) continue;
             rawJobs.push({ id, title, link });
         }
-        return this.utils.normalizeJobs(rawJobs); 
+        return Utilities.normalizeJobs(rawJobs);
     }
 }

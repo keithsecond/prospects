@@ -3,7 +3,6 @@ import { Job, JobDetails, Utilities } from '@classes/utilities';
 
 export class SchoolSpring {
     page: Page;
-    utils: Utilities;
     id: string;
     url: string;
     baseUrl: string;
@@ -12,7 +11,6 @@ export class SchoolSpring {
 
     constructor(page: Page, id?: string) {
         this.page = page;
-        this.utils = new Utilities();
         this.id = id || '';
         this.noAdmin = false;
         this.url = Utilities.URLS[this.id];
@@ -63,7 +61,7 @@ export class SchoolSpring {
             title: job.title,
             link: `${this.url}/?jobid=${job.jobId}`,
         }));
-        return this.utils.normalizeJobs(rawJobs);
+        return Utilities.normalizeJobs(rawJobs);
     }
 
     async jobDetails(jobs: Job[]): Promise<JobDetails[]> {

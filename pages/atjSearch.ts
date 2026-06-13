@@ -3,7 +3,6 @@ import { Job, Utilities } from '@classes/utilities';
 
 export class ATJ {
     page: Page;
-    utils: Utilities;
     id: string;
     container: Locator;
     job: Locator;
@@ -15,7 +14,6 @@ export class ATJ {
      */
     constructor(page: Page, id?: string) {
         this.page = page;
-        this.utils = new Utilities();
         this.id = id || '';
         this.container = this.page.locator('.list-group-item-heading');
         this.job = this.container.getByRole('link');
@@ -43,6 +41,6 @@ export class ATJ {
             if (!id) continue;
             rawJobs.push({ id, title, link });
         }
-        return this.utils.normalizeJobs(rawJobs);
+        return Utilities.normalizeJobs(rawJobs);
     }
 }

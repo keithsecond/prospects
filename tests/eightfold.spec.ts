@@ -9,7 +9,7 @@ let existingJobIds = new Set<string>();
 
 for (const [siteId, site] of Object.entries(filters)) {
     test.beforeAll( async ({}) => {
-        const persistedIds = await Utilities.getSiteJobIds(siteId) as string[];
+        const persistedIds = await Utilities.getSiteJobIds(siteId);
         for (const id of persistedIds) {
             existingJobIds.add(id);
         }

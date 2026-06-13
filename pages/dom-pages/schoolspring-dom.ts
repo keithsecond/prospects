@@ -137,6 +137,6 @@ export class SchoolSpring {
             rawDetails.push({ title, displayJobId, department, description, entityId });
         }
         await this.utils.writeDetails(this.id, rawDetails);
-        return this.utils.normalizeJobs(rawJobs);
+        return Utilities.normalizeJobs(rawJobs);
     }
 }

@@ -3,13 +3,11 @@ import { Job, JobDetails, Utilities } from '@classes/utilities';
 
 export class Eightfold {
     page: Page;
-    utils: Utilities;
     domain: string;
     baseUrl: string;
 
     constructor(page: Page, subdomain: string, domain: string) {
         this.page = page;
-        this.utils = new Utilities();
         this.domain = domain;
         this.baseUrl = `https://${subdomain}.eightfold.ai`;
     }
@@ -66,7 +64,7 @@ export class Eightfold {
             }
             start += pageSize;
         }
-        return this.utils.normalizeJobs(rawJobs);
+        return Utilities.normalizeJobs(rawJobs);
     }
 
     buildDetailsUrl(positionId: string): string {

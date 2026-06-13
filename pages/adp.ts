@@ -3,7 +3,6 @@ import { Job, JobDetails, Utilities } from '@classes/utilities';
 
 export class ADP {
     page: Page;
-    utils: Utilities;
     id: string;
     url: string;
     baseUrl: string;
@@ -12,7 +11,6 @@ export class ADP {
 
     constructor(page: Page, id?: string) {
         this.page = page;
-        this.utils = new Utilities();
         this.id = id || '';
         this.url = Utilities.URLS[this.id];
         this.baseUrl = new URL(this.url).origin;
@@ -52,7 +50,7 @@ export class ADP {
             title: job.requisitionTitle,
             link: `${this.url}&jobId=${jobUrlId}`,
         }));
-        return this.utils.normalizeJobs(rawJobs);
+        return Utilities.normalizeJobs(rawJobs);
     }
 
     async jobDetails(jobs: Job[]): Promise<JobDetails[]> {

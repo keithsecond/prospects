@@ -3,7 +3,6 @@ import { Job, Utilities } from '@classes/utilities';
 
 export class ADP {
     page: Page;
-    utils: Utilities;
     id: string;
     jobMenu: Locator;
     jobContainer: Locator;
@@ -18,7 +17,6 @@ export class ADP {
      */
     constructor(page: Page, id?: string) {
         this.page = page;
-        this.utils = new Utilities();
         this.id = id || '';
         this.jobMenu = page.getByRole('link', { name: 'Current Openings' });
         this.jobContainer = page.locator('.current-openings-list-container');
@@ -63,7 +61,7 @@ export class ADP {
             await this.backButton.click();
             await this.page.waitForLoadState('networkidle');
         }
-        return this.utils.normalizeJobs(rawJobs);
+        return Utilities.normalizeJobs(rawJobs);
     }
 }
 

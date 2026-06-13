@@ -3,7 +3,6 @@ import { Job, JobDetails, Utilities } from '@classes/utilities';
 
 export class BISD {
     page: Page;
-    utils: Utilities;
     url: string;
     domain: string;
     orgs: string;
@@ -18,7 +17,7 @@ export class BISD {
         page: Page,
     ) {
         this.page = page;
-        this.utils = new Utilities();
+  //      this.utils = new Utilities();
         this.url = Utilities.URLS['I001'];
         this.domain = Utilities.DOMAINS['I001'];
         this.orgs = Utilities.ORGS['I001'];
@@ -112,7 +111,7 @@ export class BISD {
             if (!id) continue;
             rawJobs.push({ id, title, link });
         }
-        return this.utils.normalizeJobs(rawJobs);
+        return Utilities.normalizeJobs(rawJobs);
     }
 
     buildDetailsUrl(params: Record<string, string | string[]>, jobId = ''): string {
