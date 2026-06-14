@@ -1,5 +1,5 @@
 import { Locator, Page, expect } from '@playwright/test';
-import { Job, Utilities } from '@classes/utilities';
+import { Job, Utilities } from '../../classes/utilities';
 
 export class BISD {
     page: Page;
@@ -116,7 +116,7 @@ export class BISD {
             rawJobs.push({ id, title, link });
             rawDetails.push({ title, displayJobId, department, description, entityId });
         }
-        await this.utils.writeDetails("I001", rawDetails);
+        await this.utils.writeDetails("I001", rawDetails as any);
         return Utilities.normalizeJobs(rawJobs);
     }
 }
