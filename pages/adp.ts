@@ -44,12 +44,16 @@ export class ADP {
     async getJobs(): Promise<Job[]> {
         const response = await this.page.goto(this.buildJobsUrl());
         const data = await response?.json() as any;
-        const jobUrlId = data.jobRequisitions[0].customFieldGroup.stringFields[0].stringValue;
-        const rawJobs = data.jobRequisitions.map((job: any) => ({
-            id: String(job.itemID),
-            title: job.requisitionTitle,
-            link: `${this.url}&jobId=${jobUrlId}`,
-        }));
+        const rawJobs = data.jobRequisitions.map((job: any) => {
+            const jobUrlId = job.customFieldGroup.stringFields.find(
+                (f: any) => f.nameCode?.codeValue === 'ExternalJobID'
+                )?.stringValue;
+            return {
+                id: String(job.itemID),
+                title: job.requisitionTitle,
+                link: `${this.url}&jobId=${jobUrlId}`,
+            };
+        });
         return Utilities.normalizeJobs(rawJobs);
     }
 
