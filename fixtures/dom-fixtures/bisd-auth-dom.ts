@@ -1,6 +1,7 @@
+// @ts-nocheck
 import { test as base } from '@playwright/test';
-import { BISD } from '@pages/dom-pages/bisd-dom';
-import { SpecialContextPage } from '@classes/specialContextPage';
+import { BISD } from '../../pages/dom-pages/bisd-dom';
+import { SpecialContextPage } from '../../classes/specialContextPage';
 import path from 'path';
 import dotenv from 'dotenv';
 

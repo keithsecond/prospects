@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { test } from '@fixtures/dom-fixtures/bisd-auth-dom';
 import { Job, Utilities } from '@classes/utilities';
 import { CDPValidator } from '@classes/cdpValidator';

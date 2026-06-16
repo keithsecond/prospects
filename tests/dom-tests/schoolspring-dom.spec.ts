@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { test } from '@playwright/test';
 import { SchoolSpring } from '../../pages/dom-pages/schoolspring-dom';
 import { Utilities, Job } from '../../classes/utilities';

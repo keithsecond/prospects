@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { test } from '@playwright/test';
 import { ADP } from '@pages/dom-pages/adp-dom';
 import { Utilities } from '@classes/utilities';

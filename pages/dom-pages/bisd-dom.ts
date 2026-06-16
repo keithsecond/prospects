@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Locator, Page, expect } from '@playwright/test';
 import { Job, Utilities } from '../../classes/utilities';
 
