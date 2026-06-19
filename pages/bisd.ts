@@ -131,7 +131,9 @@ export class BISD {
         return `${this.url}/api/career_hub/v1/entity/position/${jobId}?${q.toString()}`;
     }
 
-    async jobDetails(siteIdOrJobs: string | string[] | Job[], params: Record<string, string | string[]> = {}): Promise<JobDetails[]> {
+    async jobDetails(
+        siteIdOrJobs: string | string[] | Job[], 
+        params: Record<string, string | string[]> = {}): Promise<JobDetails[]> {
         const rawDetails = [] as Array<{
             title: string;
             displayJobId: string;
