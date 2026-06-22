@@ -17,7 +17,6 @@ export class BISD {
         page: Page,
     ) {
         this.page = page;
-  //      this.utils = new Utilities();
         this.url = Utilities.URLS['I001'];
         this.domain = Utilities.DOMAINS['I001'];
         this.orgs = Utilities.ORGS['I001'];
@@ -132,7 +131,7 @@ export class BISD {
     }
 
     async jobDetails(
-        siteIdOrJobs: string | string[] | Job[], 
+        siteIdOrJobs: string | string[] | Job[],
         params: Record<string, string | string[]> = {}): Promise<JobDetails[]> {
         const rawDetails = [] as Array<{
             title: string;

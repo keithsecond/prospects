@@ -67,10 +67,13 @@ export class Eightfold {
         return Utilities.normalizeJobs(rawJobs);
     }
 
-    buildDetailsUrl(positionId: string): string {
+    buildDetailsUrl(
+        positionId: string,
+        domain?: string,
+        ): string {
         const q = new URLSearchParams();
         q.set('position_id', positionId);
-        q.set('domain', this.domain);
+        q.set('domain', domain || this.domain);
         q.set('hl', 'en');
         return `${this.baseUrl}/api/pcsx/position_details?${q.toString()}`;
     }
@@ -113,6 +116,36 @@ export class Eightfold {
                 entityId: String(pos.id),
             });
         }
+        return rawDetails;
+    }
+    async singleJobDetails(jobId: string, domain: string): Promise<JobDetails[]> {
+        const rawDetails: Array<{
+            title: string;
+            displayJobId: string;
+            department: string;
+            location: string;
+            worksite: string;
+            description: string;
+            entityId: string;
+        }> = [];
+
+        const url = this.buildDetailsUrl(jobId, domain);
+        const response = await this.page.goto(url);
+        const json = await response?.json();
+        if (json.status !== 200) {
+            console.error(`API request failed with status: ${json.status}`);
+            return [];
+        }
+        const pos = json.data;
+        rawDetails.push({
+            title: pos.name,
+            displayJobId: String(pos.displayJobId),
+            department: pos.department,
+            location: pos.locations,
+            worksite: pos.workLocationOption,
+            description: convertHtml(pos.jobDescription),
+            entityId: String(pos.id),
+        });
         return rawDetails;
     }
 }

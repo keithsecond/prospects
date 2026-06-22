@@ -1,4 +1,4 @@
-# Prospects
+# prospects
 
 [![Playwright](https://img.shields.io/badge/Playwright-45ba4b?style=for-the-badge&logo=playwright&logoColor=white)](https://playwright.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -6,7 +6,7 @@
 
 A job aggregation pipeline that consolidates career portals into a single deduplicated, stateful record. Parallel HTML scraping, REST JSON APIs, and authenticated sessions behind bot detection under a unified Page Object Model.
 
-```
+```bash
 npm install
 npx playwright install chromium
 npx playwright test
@@ -48,14 +48,17 @@ prospects/
 ├── fixtures/
 │   ├── dom-fixtures/            # Archived DOM fixtures
 │   └── bisd-auth.ts             # cached login session + CDP context
-├── test-data/
+├── test-data/                   # checked out from keithsecond/prospects-data
 │   ├── sites.json               # all configured employers
 │   ├── filters.json             # per-tenant Eightfold query params
 │   ├── jobResults.json          # persistent results store
 │   └── description/             # per-org enriched job details
+├── bridge-to-career-ops.mjs
 ├── playwright.config.ts
 └── globalTeardown.ts
 ```
+
+> **Note:** `test-data/` is the private sibling repo [`keithsecond/prospects-data`](https://github.com/keithsecond/prospects-data), checked out as a subdirectory by CI. It is not committed to this repo.
 
 ---
 
@@ -63,118 +66,75 @@ prospects/
 
 Concurrent provider runs are batched via `batchAppendJobs(siteId, jobs)` in `test-data/.batch/<org>.json`. `globalTeardown` runs `consolidateBatchWrites()`: it reads the batch file, consolidates them into the main store with ID-level deduplication, and removes the batch directory.
 
-The result is order-independent and concurrency-safe.
-
 ---
 
-## Three integration shapes
+## `bridge-to-career-ops.mjs`
 
-**DOM scraping (Applitrack, ATJ).** Resilient locators against rendered pages. Applitrack and SchoolSpring detect the "no relevant categories" case and skip the site cleanly rather than failing the run.
+Bridges scraped job descriptions from `test-data/` into [`keithsecond/career-ops`](https://github.com/keithsecond/career-ops) for AI-assisted evaluation. Runs with plain Node.js — no TypeScript toolchain required.
 
-**Public JSON (Eightfold AI, SchoolSpring, ADP).** The `Eightfold` page object constructs queries against `/api/pcsx/search`, paginates by `start` offset until `totalCount` is reached, then fetches `/api/pcsx/position_details` for each result. Per-tenant configuration — subdomain, domain, filter parameters — stored in `test-data/filters.json`.
+**Reads from `test-data/` (read-only)**
+- `sites.json` + `filters.json` — reconstructs the `Utilities.ORGS` / `Utilities.URLS` lookup maps
+- `jobResults.json` — identifies postings with `status: "0"` (new, not yet acted on)
+- `description/<org>.description.json` — enriched JD text keyed by numeric entity ID
 
-**Authenticated JSON (BISD via Eightfold).** Same API family, behind a login wall and bot detection. Handled separately because the auth model and execution mode differ.
+**Writes to `career-ops/`**
+- `jds/<org-slug>-<entityId>.md` — cleaned, decoded job description ready for evaluation
+- `data/pipeline.md` — appends `- [ ] local:jds/<file>.md | <Org> | <Title>` lines under `## Pending`
+- `batch/batch-input.tsv` — rows for batch evaluation mode
 
----
-
-## CDP
-
-BISD's career portal sits behind an Eightfold tenant with light, but active, automation detection. Authentication and a running Chrome process via the Chrome DevTools Protocol allows access.
-
-`CDPValidator.isUnavailable()` checks whether CDP is available via port check and json check. If unavailable, a Chrome Debug respawn is attempted and the JSON endpoint is retried. Upon further failure, the BISD suite skips with `testInfo.skip()`.
-
-`SpecialContextPage` exposes two modes:
-
-- `cdpBrowser()` — attaches to the live Chrome instance and creates an isolated context inside it
-- `noNavigator()` — for lighter detection, creates a fresh context and patches `navigator.webdriver` out of the prototype chain at `addInitScript` time
-
-The BISD fixture (`fixtures/bisd-auth.ts`) caches the authenticated session at module scope, so all tests in the suite reuse the same login and run serially.
-
----
-
-## DOM to API Migration:
-
-Providers initially used DOM scraping for resilience. Discovery of public APIs (SchoolSpring, BISD/Eightfold) showed 20-30x speed improvements with no reliability tradeoff.
-
-DOM implementations are archived in pages/dom-pages/, fixtures/dom-fixtures, and tests/dom-tests/ and excluded via `testIgnore: '**/dom-tests/**' in playwright.config.ts`
-
----
-
-## Stateful job tracking
-
-`jobResults.json`
-
-```json
-{
-  "Juniper ISD": {
-    "Site": "Juniper ISD",
-    "URL": "https://apply.juniper.org",
-    "jobs": [
-      {
-        "id": "JOB123",
-        "title": "Network Engineer",
-        "link": "https://apply.juniper.org/careers/job/JOB123",
-        "status": "0",
-        "date": "2026-05-13",
-        "notes": ""
-      }
-    ]
-  }
-}
-```
-
-Most tests accumulates only genuinely new IDs into an in-memory set, then writes job details (department, location, work-site type, cleaned description) to `test-data/description/<org>.description.json`.
-
----
-
-## What's in the registry
-
-`test-data/sites.json` example:
-```json
-{
-  "Private": [
-    {
-      "id": "P001",
-      "org": "Example Organization",
-      "URL": "https://example.com/careers",
-      "Provider": "ADP"
-    }
-  ]
-}
-```
-
----
-
-## Running it
+**Writes back to `test-data/`**
+- `.bridge-state.json` — idempotency ledger preventing re-bridging on subsequent runs
+- `jobResults.json` — registers brand-new postings (in description files but absent from the tracker) with `status: "0"`
 
 ```bash
-# everything, in parallel
-npx playwright test
+# Default — both repos checked out as siblings
+node bridge-to-career-ops.mjs
 
-# one provider
-npx playwright test tests/schoolspring.spec.ts
+# Dry run — compute and print everything, write nothing
+node bridge-to-career-ops.mjs --dry-run
 
-# CI mode: serial, retries, no forbidden test.only
-CI=true npx playwright test
+# Explicit paths
+node bridge-to-career-ops.mjs \
+  --prospects-root ~/code/prospects \
+  --career-ops-root ~/code/career-ops
 
-# custom keyword pass through the recruiter spec
-SEARCH="network administrator" npx playwright test tests/r001.spec.ts
+# Filter to one org, cap at 5 postings
+node bridge-to-career-ops.mjs --org "Houston ISD" --limit 5
+
+# Batch output mode
+node bridge-to-career-ops.mjs --target batch
+
+# Re-bridge everything (ignore state ledger)
+node bridge-to-career-ops.mjs --reset-state
 ```
 
-BISD requires credentials in `.auth/.env`:
-
-```
-BISD_EMAIL=...
-BISD_PASSWORD=...
-```
+| Flag | Default | Description |
+|---|---|---|
+| `--prospects-root <dir>` | `.` | Path to this repo |
+| `--career-ops-root <dir>` | `../career-ops` | Path to the career-ops repo |
+| `--target <pipeline\|batch>` | `pipeline` | Output format |
+| `--org "<name>"` | all | Only process this org (repeatable) |
+| `--limit <n>` | unlimited | Cap postings bridged this run |
+| `--dry-run` | false | Print plan, write nothing |
+| `--no-update-job-results` | — | Skip back-filling `jobResults.json` |
+| `--reset-state` | false | Ignore and overwrite the state ledger |
 
 ---
 
-## In progress
+## CI/CD
 
-- [x] GitHub Actions workflow with a [containerized Chrome](https://github.com/keithsecond/headed-chrome-cdp-mac) for the CDP-gated suites — the current implementation assumes a local macOS Chrome path
-- Bridge `jobResults.json` and `<org>.description.json` with [career-ops](https://github.com/santifer/career-ops)
+Two `workflow_dispatch` workflows run on a self-hosted macOS runner:
 
-Companion projects: 
-- [headed-chrome-cdp-mac](https://github.com/keithsecond/headed-chrome-cdp-mac), a Dockerfile and support scripts for headed Chrome CDP on macOS
-- [vibe-tracker](https://github.com/keithsecond/vibe-tracker), a web dashboard over the `jobResults.json` produced by this pipeline.
+- **`prospects-tests.yml`** — full test suite (all providers, parallel + CDP)
+- **`cdp-tests.yml`** — CDP-only subset (uaWebdriver + BISD)
+
+Both workflows:
+1. Check out `prospects`, `keithsecond/headed-chrome-cdp-mac`, and `keithsecond/prospects-data` (as `test-data/`)
+2. Build the headed Chrome CDP Docker image
+3. Start XQuartz and launch the container with a host-mapped Chrome profile
+4. Wait for the CDP endpoint on `127.0.0.1:9222`
+5. Run `npx playwright test` (single invocation covering both parallel and CDP projects; `globalTeardown` consolidates batch writes at the end)
+6. On success, commit and push updated `test-data/` back to `prospects-data` — with rebase-and-retry on push conflicts
+7. Upload screenshots and Playwright reports as workflow artifacts (14-day retention)
+
+A concurrency lock (`cancel-in-progress: false`) ensures only one run executes at a time, preventing data store conflicts.
