@@ -62,9 +62,109 @@ prospects/
 
 ---
 
+## Three integration shapes
+
+**DOM scraping (Applitrack, ATJ).** Resilient locators against rendered pages. Applitrack and SchoolSpring detect the "no relevant categories" case and skip the site cleanly rather than failing the run.
+
+**Public JSON (Eightfold AI, SchoolSpring, ADP).** The `Eightfold` page object constructs queries against `/api/pcsx/search`, paginates by `start` offset until `totalCount` is reached, then fetches `/api/pcsx/position_details` for each result. Per-tenant configuration — subdomain, domain, filter parameters — stored in `test-data/filters.json`.
+
+**Authenticated JSON (BISD via Eightfold).** Same API family, behind a login wall and bot detection. Handled separately because the auth model and execution mode differ.
+
+---
+
+## CDP
+
+BISD's career portal sits behind an Eightfold tenant with light, but active, automation detection. Authentication and a running Chrome process via the Chrome DevTools Protocol allows access.
+
+`CDPValidator.isUnavailable()` checks whether CDP is available via port check and JSON check. If unavailable, a Chrome Debug respawn is attempted and the JSON endpoint is retried. Upon further failure, the BISD suite skips with `testInfo.skip()`.
+
+`SpecialContextPage` exposes two modes:
+
+- `cdpBrowser()` — attaches to the live Chrome instance and creates an isolated context inside it
+- `noNavigator()` — for lighter detection, creates a fresh context and patches `navigator.webdriver` out of the prototype chain at `addInitScript` time
+
+The BISD fixture (`fixtures/bisd-auth.ts`) caches the authenticated session at module scope, so all tests in the suite reuse the same login and run serially.
+
+---
+
+## DOM to API migration
+
+Providers initially used DOM scraping for resilience. Discovery of public APIs (SchoolSpring, BISD/Eightfold) showed 20–30x speed improvements with no reliability tradeoff. DOM implementations are archived in `pages/dom-pages/`, `fixtures/dom-fixtures/`, and `tests/dom-tests/`, and excluded via `testIgnore: '**/dom-tests/**'` in `playwright.config.ts`.
+
+---
+
 ## Parallel execution without file contention
 
-Concurrent provider runs are batched via `batchAppendJobs(siteId, jobs)` in `test-data/.batch/<org>.json`. `globalTeardown` runs `consolidateBatchWrites()`: it reads the batch file, consolidates them into the main store with ID-level deduplication, and removes the batch directory.
+Concurrent provider runs are batched via `batchAppendJobs(siteId, jobs)` in `test-data/.batch/<org>.json`. `globalTeardown` runs `consolidateBatchWrites()`: it reads the batch files, consolidates them into the main store with ID-level deduplication, and removes the batch directory.
+
+---
+
+## Stateful job tracking
+
+`jobResults.json` is the persistent store for all discovered postings across all orgs:
+
+```json
+{
+  "Juniper ISD": {
+    "Site": "Juniper ISD",
+    "URL": "https://apply.juniper.org",
+    "jobs": [
+      {
+        "id": "JOB123",
+        "title": "Network Engineer",
+        "link": "https://apply.juniper.org/careers/job/JOB123",
+        "status": "0",
+        "date": "2026-05-13",
+        "notes": ""
+      }
+    ]
+  }
+}
+```
+
+Most tests accumulate only genuinely new IDs into an in-memory set, then write job details (department, location, work-site type, cleaned description) to `test-data/description/<org>.description.json`.
+
+---
+
+## Site registry
+
+`test-data/sites.json` groups employers by provider type:
+
+```json
+{
+  "Private": [
+    {
+      "id": "P001",
+      "org": "Example Organization",
+      "URL": "https://example.com/careers",
+      "Provider": "ADP"
+    }
+  ]
+}
+```
+
+Eightfold tenants are configured separately in `test-data/filters.json` with subdomain, domain, and per-tenant filter parameters.
+
+---
+
+## Running it
+
+```bash
+# everything, in parallel
+npx playwright test
+
+# one provider
+npx playwright test tests/schoolspring.spec.ts
+
+# CI mode: serial, retries, no forbidden test.only
+CI=true npx playwright test
+
+# custom keyword passed through the recruiter spec
+SEARCH="network administrator" npx playwright test tests/r001.spec.ts
+
+#  one-off Job Description generation for eightfold client
+JOBID="example,example.com,1244546jobid" npx playwright test tests/eightfold.spec.ts
+```
 
 ---
 
