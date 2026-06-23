@@ -11,7 +11,7 @@ export class Applitrack {
     noAdmin: boolean;
 
     /**
-     * Creates a SchoolSpring page model.
+     * Creates an Applitrack page model.
      * @param page Playwright page instance for browsing and actions.
      * @param id Optional site ID used to look up the URL from Utilities.URLS.
      */
@@ -34,11 +34,6 @@ export class Applitrack {
         }
     }
 
-    /**
-     * Gathers all jobs from the currently loaded search results.
-     *
-     * @returns Promise<Job[]> normalized job list with id, title, and link.
-     */
     async getJobs(): Promise<Job[]> {
         const foundJobs = this.job;
         const count = await foundJobs.count();

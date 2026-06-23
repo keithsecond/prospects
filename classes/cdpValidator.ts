@@ -1,8 +1,9 @@
 import { execSync } from 'child_process';
 
 /**
- * Utility to validate Chrome Debug Protocol (CDP) availability.
- * Checks port connectivity and JSON endpoint response.
+ * Utility class for validating Chrome Debug Protocol (CDP) availability.
+ * Checks port connectivity and validates JSON endpoint responses.
+ * Automatically attempts to launch Chrome debugger if unavailable.
  */
 export class CDPValidator {
     private static readonly CDP_HOST = '127.0.0.1';
@@ -48,8 +49,8 @@ export class CDPValidator {
         } catch (error) {
             console.error(`Port check failed:`, error);
             return false;
-        }    
-    }    
+        }
+    }
 
     private static async isJsonEndpointValid(): Promise<boolean> {
         try {

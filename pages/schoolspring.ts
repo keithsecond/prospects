@@ -19,6 +19,12 @@ export class SchoolSpring {
         this.baseUrl = 'https://api.schoolspring.com';
     }
 
+    /**
+     * Builds the SchoolSpring jobs search API URL.
+     * @param {number} [page=1] - Page number for pagination
+     * @param {number} [size=250] - Number of results per page
+     * @returns {string} Search API URL
+     */
     buildUrl(page = 1, size = 250): string {
         const q = new URLSearchParams();
         q.set('domainName', `${this.boardToken}.schoolspring.com`);

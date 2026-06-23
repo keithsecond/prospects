@@ -44,6 +44,13 @@ export class BISD {
         );
     }
 
+    /**
+     * Builds the BISD search API URL with filters and pagination.
+     * @param {Record<string, string | string[]>} params - Filter parameters
+     * @param {string} [query=''] - Search query term
+     * @param {number} [pageSize=100] - Maximum results per page
+     * @returns {string} Search API URL
+     */
     buildJobsUrl(params: Record<string, string | string[]>, query = '', pageSize = 100): string {
         const q = new URLSearchParams();
         q.set('search_data_id', 'search');
@@ -66,6 +73,13 @@ export class BISD {
         return `${this.url}/api/career_hub/v1/search/position?${q.toString()}`;
     }
 
+    /**
+     * Fetches filtered jobs from the BISD search API.
+     * Adjusts page size to cover the total count when needed.
+     * @param {string} searchTerm - Search string
+     * @param {Record<string, string | string[]>} [params={}] - Additional API filters
+     * @returns {Promise<Job[]>} Array of normalized jobs
+     */
     async getJobs(searchTerm: string, params: Record<string, string | string[]> = {}): Promise<Job[]> {
         const rawJobs = [] as Array<{
             id: string;
@@ -113,6 +127,12 @@ export class BISD {
         return Utilities.normalizeJobs(rawJobs);
     }
 
+    /**
+     * Builds the BISD position details API URL.
+     * @param {Record<string, string | string[]>} params - Query parameters
+     * @param {string} [jobId=''] - Position ID
+     * @returns {string} Details API URL
+     */
     buildDetailsUrl(params: Record<string, string | string[]>, jobId = ''): string {
         const q = new URLSearchParams();
         q.set('search_data_id', 'search');
@@ -130,6 +150,12 @@ export class BISD {
         return `${this.url}/api/career_hub/v1/entity/position/${jobId}?${q.toString()}`;
     }
 
+    /**
+     * Fetches job detail records by site ID, job IDs array, or Job objects.
+     * @param {string | string[] | Job[]} siteIdOrJobs - Site ID or collection of jobs/IDs
+     * @param {Record<string, string | string[]>} [params={}] - Additional detail query parameters
+     * @returns {Promise<JobDetails[]>} Detailed job records
+     */
     async jobDetails(
         siteIdOrJobs: string | string[] | Job[],
         params: Record<string, string | string[]> = {}): Promise<JobDetails[]> {

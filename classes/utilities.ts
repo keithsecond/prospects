@@ -100,6 +100,12 @@ export class Utilities {
     // SECTION 4: Static Query Methods (Site / Provider lookups)
     // ─────────────────────────────────────────────
 
+    /**
+     * Retrieves all job IDs for a given site from the job results file.
+     *
+     * @param {string} siteId - The site identifier (e.g. 'I001')
+     * @returns {Promise<string[]>} Array of job IDs associated with the requested site
+     */
     static async getSiteJobIds(siteId: string): Promise<string[]> {
         let results: Record<string, any> = {};
         try {
@@ -136,6 +142,13 @@ export class Utilities {
         return map[siteId] || [];
     }
 
+    /**
+     * Retrieves all sites for a given provider.
+     * For 'eightfold', merges static site entries with Eightfold filter entries.
+     *
+     * @param {string} provider - Provider name (e.g. 'eightfold')
+     * @returns {Array<SiteEntry>} Sites associated with the provider
+     */
     static getSitesByProvider(provider: string) {
         const fromSites = [
             ...Utilities.ALL_SITES,
@@ -165,6 +178,16 @@ export class Utilities {
     // SECTION 5b: Private Helpers
     // ─────────────────────────────────────────────
 
+    /**
+     * Merges incoming items into an existing array using a unique identifier.
+     * Preserves order and avoids duplicates.
+     *
+     * @template T
+     * @param {T[]} existing - Existing items
+     * @param {T[]} incoming - New items to merge
+     * @param {(item: T) => string} getId - Function to obtain the item's unique id
+     * @returns {T[]} Merged array containing unique items
+     */
     private mergeUnique<T>(
         existing: T[],
         incoming: T[],
@@ -186,6 +209,13 @@ export class Utilities {
     // SECTION 6: Instance Methods — Job Normalization
     // ─────────────────────────────────────────────
 
+    /**
+     * Normalizes raw job input before saving.
+     * Filters out invalid jobs and adds default metadata fields.
+     *
+     * @param {JobInput[]} jobs - Raw jobs from site APIs
+     * @returns {Promise<Job[]>} Normalized job entries
+     */
     static async normalizeJobs(jobs: JobInput[]): Promise<Job[]> {
         const today = new Date().toISOString().split('T')[0];
         return jobs
@@ -204,6 +234,14 @@ export class Utilities {
     // SECTION 7: Instance Methods — Batch I/O (primary write path)
     // ─────────────────────────────────────────────
 
+    /**
+     * Appends jobs to a batch file for the specified site.
+     * Batch files are later consolidated into the main job results file.
+     *
+     * @param {string} key - Site ID key
+     * @param {Job[]} jobs - Jobs to append
+     * @returns {Promise<void>}
+     */
     async batchAppendJobs(key: string, jobs: Job[]) {
         await mkdir(this.batchDir, { recursive: true });
         const org = Utilities.ORGS[key] || key;
@@ -226,6 +264,12 @@ export class Utilities {
         await writeFile(batchFile, JSON.stringify(batchData, null, 2));
     }
 
+    /**
+     * Consolidates all pending batch files into the main job results file.
+     * Reads batch files, merges unique jobs, writes the aggregate, and removes batch artifacts.
+     *
+     * @returns {Promise<void>}
+     */
     async consolidateBatchWrites() {
         let mainData: Record<string, any> = {};
         
@@ -292,6 +336,14 @@ export class Utilities {
     // SECTION 8: Instance Methods — Direct I/O
     // ─────────────────────────────────────────────
     
+    /**
+     * Writes detailed job metadata to an organization-specific description file.
+     * Merges with existing entries based on JobID.
+     *
+     * @param {string} key - Site ID key
+     * @param {JobDetails[]} details - Detailed job information
+     * @returns {Promise<void>}
+     */
     async writeDetails(key: string, details: JobDetails[]) {
         const org = Utilities.ORGS[key] || key;
         const detailsFile = path.join(__dirname, `../test-data/description/${org}.description.json`);
@@ -329,6 +381,12 @@ export class Utilities {
 
     /**
      * @deprecated Use {@link batchAppendJobs} instead.
+     *
+     * Writes jobs directly to the main job results file.
+     *
+     * @param {string} key - Site ID key
+     * @param {Job[]} jobs - Jobs to write
+     * @returns {Promise<void>}
      */
     async writeJobs(key: string, jobs: Job[]) {
         let data: Record<string, any> = {};

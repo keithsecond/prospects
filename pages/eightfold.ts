@@ -6,12 +6,23 @@ export class Eightfold {
     domain: string;
     baseUrl: string;
 
+    /**
+     * @param {Page} page - Playwright page instance
+     * @param {string} subdomain - Eightfold subdomain used to construct the base URL
+     * @param {string} domain - Eightfold domain parameter for API queries
+     */
     constructor(page: Page, subdomain: string, domain: string) {
         this.page = page;
         this.domain = domain;
         this.baseUrl = `https://${subdomain}.eightfold.ai`;
     }
 
+    /**
+     * Builds the Eightfold search URL with query and filter parameters.
+     * @param {Record<string, string | string[]>} params - Search filters
+     * @param {number} [start=0] - Pagination offset
+     * @returns {string} Constructed search API URL
+     */
     buildUrl(params: Record<string, string | string[]>, start = 0): string {
         const q = new URLSearchParams();
         q.set('domain', this.domain);
@@ -31,6 +42,12 @@ export class Eightfold {
         return `${this.baseUrl}/api/pcsx/search?${q.toString()}`;
     }
 
+    /**
+     * Fetches job listings from Eightfold using pagination.
+     * Continues until all results are retrieved or the API signals completion.
+     * @param {Record<string, string | string[]>} [params={}] - Search filters
+     * @returns {Promise<Job[]>} Normalized job list
+     */
     async getJobs(params: Record<string, string | string[]> = {}): Promise<Job[]> {
         const rawJobs: Array<{
             id: string;
@@ -66,6 +83,12 @@ export class Eightfold {
         }
         return Utilities.normalizeJobs(rawJobs);
     }
+    /**
+     * Builds a normalized single job entry when the exact position ID is known.
+     * @param {string} title - Job title
+     * @param {string} jobId - Eightfold position ID
+     * @returns {Promise<Job[]>} Single normalized job array
+     */
     async getSingleJob(title: string, jobId: string): Promise<Job[]> {
         const rawJobs: Array<{
             id: string;
@@ -80,6 +103,12 @@ export class Eightfold {
         return Utilities.normalizeJobs(rawJobs);
 
     }    
+    /**
+     * Builds the Eightfold position details URL.
+     * @param {string} positionId - Position identifier
+     * @param {string} [domain] - Optional domain override
+     * @returns {string} Position details API URL
+     */
     buildDetailsUrl(
         positionId: string,
         domain?: string,
@@ -91,6 +120,12 @@ export class Eightfold {
         return `${this.baseUrl}/api/pcsx/position_details?${q.toString()}`;
     }
 
+    /**
+     * Fetches job details for a set of jobs or a site identifier.
+     * If a site ID is provided, loaded job IDs are resolved via Utilities.getSiteJobIds.
+     * @param {string | string[] | Job[]} siteIdOrJobs - Site ID, job IDs, or Job objects
+     * @returns {Promise<JobDetails[]>} Array of normalized job details
+     */
     async jobDetails(siteIdOrJobs: string | string[] | Job[]): Promise<JobDetails[]> {
         const rawDetails: Array<{
             title: string;
@@ -131,6 +166,12 @@ export class Eightfold {
         }
         return rawDetails;
     }
+    /**
+     * Fetches details for a single Eightfold job by ID and domain.
+     * @param {string} jobId - Job identifier
+     * @param {string} domain - Eightfold domain parameter
+     * @returns {Promise<JobDetails[]>} Array containing one job detail record
+     */
     async singleJobDetails(jobId: string, domain: string): Promise<JobDetails[]> {
         const rawDetails: Array<{
             title: string;
