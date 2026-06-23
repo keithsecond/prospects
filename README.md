@@ -162,8 +162,8 @@ CI=true npx playwright test
 # custom keyword passed through the recruiter spec
 SEARCH="network administrator" npx playwright test tests/r001.spec.ts
 
-#  one-off Job Description generation for eightfold client
-JOBID="example,example.com,1244546jobid" npx playwright test tests/eightfold.spec.ts
+#  Job Description generation for eightfold client - https://example.eightfold.ai/careers/job/446718414598
+JOBID="example,example.com,446718414598" npx playwright test tests/eightfold.spec.ts
 ```
 
 ---

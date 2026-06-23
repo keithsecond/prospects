@@ -66,7 +66,20 @@ export class Eightfold {
         }
         return Utilities.normalizeJobs(rawJobs);
     }
+    async getSingleJob(title: string, jobId: string): Promise<Job[]> {
+        const rawJobs: Array<{
+            id: string;
+            title: string;
+            link: string
+        }> = [];
+        rawJobs.push({
+            id: jobId,
+            title: title,
+            link: `${this.baseUrl}/careers?pid=${jobId}`,
+        });
+        return Utilities.normalizeJobs(rawJobs);
 
+    }    
     buildDetailsUrl(
         positionId: string,
         domain?: string,

@@ -12,9 +12,11 @@ test.describe(() => {
         const [subdomain, domain, jobId] = process.env.JOBID.split(',');
         test(`search ${jobId}`, async ({ page }) => {
             const ef = new Eightfold(page, subdomain, domain);
-            const url = ef.buildDetailsUrl(jobId, domain);
             const details = await ef.singleJobDetails(jobId, domain);
             await utils.writeDetails(subdomain, details);
+            const title = details[0].title;
+            const job = await ef.getSingleJob(title, jobId);
+            await utils.batchAppendJobs(subdomain, job);
         });
     return;
     }
