@@ -30,6 +30,11 @@ prospects/
 │   ├── schoolspring.ts          # SchoolSpring (API)
 │   ├── eightfold.ts             # Eightfold tenants (API)
 │   ├── bisd.ts                  # Authenticated Eightfold (API)
+│   ├── greenhouse.ts            # Greenhouse (API)
+│   ├── ashby.ts                 # Ashby (API)
+│   ├── lever.ts                 # Lever (API)
+│   ├── smartrecruiters.ts       # SmartRecruiters (API)
+│   ├── recruitee.ts             # Recruitee (API)
 │   └── localRecruiters/r001/    # Recruiter-specific search
 ├── tests/
 │   ├── dom-tests/               # Archived DOM tests
@@ -39,6 +44,11 @@ prospects/
 │   ├── schoolspring.spec.ts
 │   ├── eightfold.spec.ts
 │   ├── bisd.spec.ts             # serial, CDP-gated
+│   ├── greenhouse.spec.ts
+│   ├── ashby.spec.ts
+│   ├── lever.spec.ts
+│   ├── smartrecruiters.spec.ts
+│   ├── recruitee.spec.ts
 │   ├── r001.spec.ts
 │   └── uaWebdriver.spec.ts      # fingerprint validation
 ├── classes/
@@ -66,7 +76,7 @@ prospects/
 
 **DOM scraping (Applitrack, ATJ).** Resilient locators against rendered pages. Applitrack and SchoolSpring detect the "no relevant categories" case and skip the site cleanly rather than failing the run.
 
-**Public JSON (Eightfold AI, SchoolSpring, ADP).** The `Eightfold` page object constructs queries against `/api/pcsx/search`, paginates by `start` offset until `totalCount` is reached, then fetches `/api/pcsx/position_details` for each result. Per-tenant configuration — subdomain, domain, filter parameters — stored in `test-data/filters.json`.
+**Public JSON (Eightfold AI, SchoolSpring, ADP, Greenhouse, Ashby, Lever, SmartRecruiters, Recruitee).** The `Eightfold` page object constructs queries against `/api/pcsx/search`, paginates by `start` offset until `totalCount` is reached, then fetches `/api/pcsx/position_details` for each result. Per-tenant configuration — subdomain, domain, filter parameters — stored in `test-data/filters.json`. `Greenhouse`, `Ashby`, `Lever`, `SmartRecruiters`, and `Recruitee` follow the same shape against each platform's public job-board API, with the company/board slug parsed directly out of the configured `URL`: `Greenhouse` (`boards-api.greenhouse.io`) and `SmartRecruiters` (`api.smartrecruiters.com`) require a per-job detail request; `Ashby`, `Lever`, and `Recruitee` ship the full description inline in the listing payload, so `jobDetails()` re-fetches that same listing and filters it down rather than issuing per-job requests.
 
 **Authenticated JSON (BISD via Eightfold).** Same API family, behind a login wall and bot detection. Handled separately because the auth model and execution mode differ.
 
