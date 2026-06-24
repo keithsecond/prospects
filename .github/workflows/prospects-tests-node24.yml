@@ -86,13 +86,13 @@ jobs:
             exit 1
           fi
           XQUARTZ_LINE=$(netstat -an -p tcp | awk '$4 ~ /\.600[0-3]$/ && $6 == "LISTEN" {print; exit}')
-          DP=$(echo "$XQUARTZ_LINE" | awk '{match($4, /600([0-3])$/, a); print a[1]}')
+          DP=$(echo "$XQUARTZ_LINE" | awk '{sub(/.*\.600/, "", $4); print $4}')
           echo "Using $INT -> $IP, display :$DP"
           xhost +127.0.0.1 $IP > /dev/null
           docker run -d \
             --name "$CONTAINER_NAME" \
             -p 127.0.0.1:9222:9222 \
-            -e DISPLAY="$IP:0" \
+            -e DISPLAY="$IP:$DP" \
             -v /tmp/.X11-unix:/tmp/.X11-unix \
             -v "$HOME/chrome-cdp-profile:/data" \
             --security-opt seccomp="$HOME/chrome.json" \
