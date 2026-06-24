@@ -59,14 +59,14 @@ jobs:
           if ! pgrep -x Xquartz > /dev/null; then
             open -a XQuartz
             for i in {1..20}; do
-              if netstat -an -p tcp | awk '$4 ~ /\.6000$/ && $6 == "LISTEN" {found=1} END {exit !found}'; then
+              if netstat -an -p tcp | awk '$4 ~ /\.600[0-3]$/ && $6 == "LISTEN" {found=1} END {exit !found}'; then
                 break
               fi
               sleep 1
             done
           fi
-          if ! netstat -an -p tcp | awk '$4 ~ /\.6000$/ && $6 == "LISTEN" {found=1} END {exit !found}'; then
-            echo "XQuartz never started listening on :6000" >&2
+          if ! netstat -an -p tcp | awk '$4 ~ /\.600[0-3]$/ && $6 == "LISTEN" {found=1} END {exit !found}'; then
+            echo "XQuartz never started listening on :600[0-3]" >&2
             exit 1
           fi
 
@@ -84,7 +84,9 @@ jobs:
             echo "Could not determine host IP" >&2
             exit 1
           fi
-          echo "Using $INT"
+          XQUARTZ_LINE=$(netstat -an -p tcp | awk '$4 ~ /\.600[0-3]$/ && $6 == "LISTEN" {print; exit}')
+          DP=$(echo "$XQUARTZ_LINE" | awk '{match($4, /600([0-3])$/, a); print a[1]}')
+          echo "Using $INT -> $IP, display :$DP"
           xhost +127.0.0.1 $IP > /dev/null
           docker run -d \
             --name "$CONTAINER_NAME" \
