@@ -4,6 +4,9 @@ import { CDPValidator } from '@classes/cdpValidator';
 
 const utils = new Utilities();
 const searchTerms = ['IT', 'IT Software', 'ITIL', 'IT Support', 'IT Infrastructure', 'Help Desk', 'Help Desk Analyst', 'Service Desk'];
+const randomDelay = () => new Promise(resolve =>
+    setTimeout(resolve, Math.floor(Math.random() * (22000 - 7000 + 1)) + 7000)
+);
 
 test.describe('BISD', () => {
     test.describe.configure({ mode: 'serial' });
@@ -19,6 +22,10 @@ test.describe('BISD', () => {
             existingJobIds.add(id);
         }
     });
+    test.beforeEach(async () => {
+        await randomDelay();
+    });
+
     for (const searchTerm of searchTerms) {
         test(`BISD ${searchTerm}`, async ({ bisd }) => {
             test.slow();

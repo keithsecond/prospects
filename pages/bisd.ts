@@ -38,6 +38,13 @@ export class BISD {
 
     async login(email: string, password: string) {
         await this.loginLink.click();
+        await this.page.waitForURL(
+            url => url.href.includes('careerhub'),
+            { timeout: 15000 }
+        );
+        if (await this.userMenu.isVisible()) {
+            return;
+        }
         await this.page.waitForSelector('[data-testid="auth-entry-title"]', { timeout: 15000 });
         if (await this.googleButton.isVisible()) {
             await this.googleButton.click();
@@ -46,17 +53,19 @@ export class BISD {
         await popup.waitForURL('**/accounts.google.com**');
         if (await popup.locator(`[data-identifier="${email}"]`).isVisible()) {
             await popup.locator(`[data-identifier="${email}"]`).click();
+            await popup.getByRole('button', { name: 'Continue' }).click();
+        } else {
+            await popup.waitForLoadState('domcontentloaded');
+            await popup.getByRole('textbox', { name: 'Email or phone' }).fill(email);
+            await popup.getByRole('button', { name: 'Next' }).click();
+            await popup.getByRole('textbox', { name: 'Enter your password' }).fill(password);
+            await popup.getByRole('button', { name: 'Next' }).click();
+            await popup.getByRole('button', { name: 'Continue' }).click();
+            await popup.waitForEvent('close', { timeout: 15000 });
         }
-        await popup.waitForLoadState('domcontentloaded');
-        await popup.getByRole('textbox', { name: 'Email or phone' }).fill(email);
-        await popup.getByRole('button', { name: 'Next' }).click();
-        await popup.getByRole('textbox', { name: 'Enter your password' }).fill(password);
-        await popup.getByRole('button', { name: 'Next' }).click();
-        await popup.getByRole('button', { name: 'Continue' }).click();
-        await popup.waitForEvent('close', { timeout: 15000 });
         await this.page.waitForURL(
             url => url.href.includes('careerhub'),
-            { timeout: 30000 }
+            { timeout: 15000 }
         );
     }
 

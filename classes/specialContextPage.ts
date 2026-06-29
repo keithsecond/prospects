@@ -38,9 +38,9 @@ export class SpecialContextPage {
         }
         this.browser = await chromium.connectOverCDP('http://localhost:9222');
 
-        // Create a fresh context for this test
-        // Other parallel tests will have their own contexts - they're isolated
-        const context = await this.browser.newContext();
+        // Reuse the browser's default context backed by the persistent
+        // profile mounted at /data
+        const context = this.browser.contexts()[0] ?? await this.browser.newContext();
         this.page = await context.newPage();
         this.context = context;
     }
