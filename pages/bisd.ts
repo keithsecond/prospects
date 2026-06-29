@@ -13,7 +13,6 @@ export class BISD {
     googleNextButton: Locator;
     googlePassword: Locator;
     googleContinueButton: Locator;
-    popupPromise: Promise<Page>;
 
     constructor(
         page: Page,
@@ -29,7 +28,6 @@ export class BISD {
         this.googlePassword = this.page.getByRole('textbox', { name: 'Enter your password' });
         this.googleNextButton = this.page.getByRole('button', { name: 'Next' });
         this.googleContinueButton = this.page.getByRole('button', { name: 'Continue' });
-        this.popupPromise = page.waitForEvent('popup');
     };
 
     async searchPage() {
@@ -49,7 +47,8 @@ export class BISD {
         if (await this.googleButton.isVisible()) {
             await this.googleButton.click();
         }
-        const popup = await this.popupPromise;
+        const popupPromise = this.page.waitForEvent('popup');
+        const popup = await popupPromise;
         await popup.waitForURL('**/accounts.google.com**');
         if (await popup.locator(`[data-identifier="${email}"]`).isVisible()) {
             await popup.locator(`[data-identifier="${email}"]`).click();
