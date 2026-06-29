@@ -57,7 +57,7 @@ prospects/
 │   └── cdpValidator.ts          # CDP port health, Chrome auto-launch
 ├── fixtures/
 │   ├── dom-fixtures/            # Archived DOM fixtures
-│   └── bisd-auth.ts             # cached login session + CDP context
+│   └── bisd-auth.ts             # cached login session + CDP context, worker scoped
 ├── test-data/                   # checked out from keithsecond/prospects-data
 │   ├── sites.json               # all configured employers
 │   ├── filters.json             # per-tenant Eightfold query params
@@ -90,10 +90,10 @@ BISD's career portal sits behind an Eightfold tenant with light, but active, aut
 
 `SpecialContextPage` exposes two modes:
 
-- `cdpBrowser()` — attaches to the live Chrome instance and creates an isolated context inside it
+- `cdpBrowser()` — attaches to the live Chrome instance and uses the persistent context inside it
 - `noNavigator()` — for lighter detection, creates a fresh context and patches `navigator.webdriver` out of the prototype chain at `addInitScript` time
 
-The BISD fixture (`fixtures/bisd-auth.ts`) caches the authenticated session at module scope, so all tests in the suite reuse the same login and run serially.
+The BISD fixture (`fixtures/bisd-auth.ts`) caches the authenticated session at worker scope, so all tests in the bisd spec reuse the same login and run serially.
 
 ---
 
