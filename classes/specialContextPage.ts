@@ -38,9 +38,12 @@ export class SpecialContextPage {
         }
         this.browser = await chromium.connectOverCDP('http://localhost:9222');
 
-        // Create a fresh context for this test
-        // Other parallel tests will have their own contexts - they're isolated
-        const context = await this.browser.newContext();
+        // Reuse the browser's default context - it's the one backed by the
+        // persistent profile mounted at /data, which is where Google SSO
+        // session cookies actually get saved across container restarts.
+        // A fresh newContext() would be an isolated, non-persistent context
+        // unrelated to that on-disk profile.
+        const context = this.browser.contexts()[0] ?? await this.browser.newContext();
         this.page = await context.newPage();
         this.context = context;
     }
