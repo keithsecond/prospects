@@ -7,11 +7,13 @@ export class BISD {
     domain: string;
     orgs: string;
     loginLink: Locator;
-    username: Locator;
-    usernameButton: Locator;
-    password: Locator;
-    submitButton: Locator;
     userMenu: Locator;
+    googleButton: Locator;
+    googleUsername: Locator;
+    googleNextButton: Locator;
+    googlePassword: Locator;
+    googleContinueButton: Locator;
+    popupPromise: Promise<Page>;
 
     constructor(
         page: Page,
@@ -21,11 +23,13 @@ export class BISD {
         this.domain = Utilities.DOMAINS['I001'];
         this.orgs = Utilities.ORGS['I001'];
         this.loginLink = page.locator('.candidate-login-link');
-        this.username = page.getByTestId('auth-entry-email-input');
-        this.usernameButton = page.getByRole('button', { name: 'Continue' });
-        this.password = page.getByTestId('auth-entry-password-input');
-        this.submitButton = page.getByRole('button', { name: 'Submit' })
         this.userMenu = page.getByRole('button', { name: 'User Menu' });
+        this.googleButton = this.page.getByRole('button', { name: /google/i });
+        this.googleUsername = this.page.getByRole('textbox', { name: 'Email or phone' });
+        this.googlePassword = this.page.getByRole('textbox', { name: 'Enter your password' });
+        this.googleNextButton = this.page.getByRole('button', { name: 'Next' });
+        this.googleContinueButton = this.page.getByRole('button', { name: 'Continue' });
+        this.popupPromise = page.waitForEvent('popup');
     };
 
     async searchPage() {
@@ -34,10 +38,22 @@ export class BISD {
 
     async login(email: string, password: string) {
         await this.loginLink.click();
-        await this.username.fill(email);
-        await this.usernameButton.click();
-        await this.password.fill(password);
-        await this.submitButton.click();
+        await this.page.waitForSelector('[data-testid="auth-entry-title"]', { timeout: 15000 });
+        if (await this.googleButton.isVisible()) {
+            await this.googleButton.click();
+        }
+        const popup = await this.popupPromise;
+        await popup.waitForURL('**/accounts.google.com**');
+        if (await popup.locator(`[data-identifier="${email}"]`).isVisible()) {
+            await popup.locator(`[data-identifier="${email}"]`).click();
+        }
+        await popup.waitForLoadState('domcontentloaded');
+        await popup.getByRole('textbox', { name: 'Email or phone' }).fill(email);
+        await popup.getByRole('button', { name: 'Next' }).click();
+        await popup.getByRole('textbox', { name: 'Enter your password' }).fill(password);
+        await popup.getByRole('button', { name: 'Next' }).click();
+        await popup.getByRole('button', { name: 'Continue' }).click();
+        await popup.waitForEvent('close', { timeout: 15000 });
         await this.page.waitForURL(
             url => url.href.includes('careerhub'),
             { timeout: 30000 }

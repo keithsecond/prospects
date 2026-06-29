@@ -38,7 +38,7 @@ export const test = base.extend<BISDFixtures>({
                 await cachedBISD.login(email, password);
                 isLoginComplete = true;
             } else {
-                console.warn('BISD_EMAIL and BISD_PASSWORD not set in .auth/.env - skipping login');
+                console.warn('BISD_EMAIL or BISD_PASSWORD not set in .auth/.env - skipping login');
             }
             await use(cachedBISD);
         } catch (error) {

@@ -35,7 +35,8 @@ export class CDPValidator {
     private static launchChromeDebugger(): void {
         try {
             execSync(
-                `nohup "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --remote-debugging-port=9222 --user-data-dir="$HOME/.config/google-chrome" &>/dev/null &`
+                `sh /Users/sportlaptop/projects/docker/chrome-cdp/cdprun; sleep 7`
+//                `nohup "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --remote-debugging-port=9222 --user-data-dir="$HOME/.config/google-chrome" &>/dev/null &`
             );
         } catch (error) {
             console.error('Failed to launch Chrome debugger:', error);

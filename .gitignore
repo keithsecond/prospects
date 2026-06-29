@@ -17,6 +17,7 @@ eslint.config.mjs
 !/.auth/.env.example
 
 /utilities/
+/scripts/*
 
 /test-data/*
 !/test-data/.gitkeep
