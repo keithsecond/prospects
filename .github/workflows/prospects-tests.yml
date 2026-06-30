@@ -144,10 +144,12 @@ jobs:
         # 1. parallel-tests (ADP, Applitrack, ATJ, SchoolSpring, Eightfold, R001)
         # 2. cdp-tests (BISD + uaWebdriver)
         # globalTeardown runs once at the end, consolidating all batch writes
+        # Projects pinned explicitly so the manual-only "discovery" project
+        # (Google SDET search) never joins this sweep.
         working-directory: prospects
         env:
           CI: 'true'
-        run: npx playwright test
+        run: npx playwright test --project=parallel-tests --project=cdp-tests
 
       - name: Show container logs on failure
         if: failure()
