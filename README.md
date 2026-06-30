@@ -22,20 +22,20 @@ Each platform has a dedicated page object exposing a consistent surface: `search
 
 ```
 prospects/
-├── pages/
-│   ├── dom-pages/               # Archived DOM pages
-│   ├── adp.ts                   # ADP
-│   ├── applitrack.ts            # Applitrack
-│   ├── atjSearch.ts             # ApplyToJob
-│   ├── schoolspring.ts          # SchoolSpring (API)
-│   ├── eightfold.ts             # Eightfold tenants (API)
-│   ├── bisd.ts                  # Authenticated Eightfold (API)
-│   ├── greenhouse.ts            # Greenhouse (API)
-│   ├── ashby.ts                 # Ashby (API)
-│   ├── lever.ts                 # Lever (API)
-│   ├── smartrecruiters.ts       # SmartRecruiters (API)
-│   ├── recruitee.ts             # Recruitee (API)
-│   └── localRecruiters/r001/    # Recruiter-specific search
+├── pages/                       # Per provider DOM or JSON API POMs
+│   ├── dom-pages/               # archived DOM pages
+│   ├── adp.ts
+│   ├── applitrack.ts
+│   ├── atjSearch.ts
+│   ├── schoolspring.ts
+│   ├── eightfold.ts
+│   ├── bisd.ts
+│   ├── greenhouse.ts
+│   ├── ashby.ts
+│   ├── lever.ts
+│   ├── smartrecruiters.ts
+│   ├── recruitee.ts
+│   └── localRecruiters/
 ├── tests/
 │   ├── dom-tests/               # Archived DOM tests
 │   ├── adp.spec.ts
@@ -63,7 +63,7 @@ prospects/
 │   ├── filters.json             # per-tenant Eightfold query params
 │   ├── jobResults.json          # persistent results store
 │   └── description/             # per-org enriched job details
-├── bridge-to-career-ops.mjs
+├── bridge-to-career-ops.mjs     # feeds flat file job descriptions to career-ops
 ├── playwright.config.ts
 └── globalTeardown.ts
 ```
