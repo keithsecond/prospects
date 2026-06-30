@@ -23,40 +23,15 @@ Each platform has a dedicated page object exposing a consistent surface: `search
 ```
 prospects/
 ├── pages/                       # Per provider DOM or JSON API POMs
-│   ├── dom-pages/               # archived DOM pages
-│   ├── adp.ts
-│   ├── applitrack.ts
-│   ├── atjSearch.ts
-│   ├── schoolspring.ts
-│   ├── eightfold.ts
-│   ├── bisd.ts
-│   ├── greenhouse.ts
-│   ├── ashby.ts
-│   ├── lever.ts
-│   ├── smartrecruiters.ts
-│   ├── recruitee.ts
-│   └── localRecruiters/
 ├── tests/
-│   ├── dom-tests/               # Archived DOM tests
-│   ├── adp.spec.ts
-│   ├── applitrack.spec.ts
-│   ├── atj.spec.ts
-│   ├── schoolspring.spec.ts
-│   ├── eightfold.spec.ts
-│   ├── bisd.spec.ts             # serial, CDP-gated
-│   ├── greenhouse.spec.ts
-│   ├── ashby.spec.ts
-│   ├── lever.spec.ts
-│   ├── smartrecruiters.spec.ts
-│   ├── recruitee.spec.ts
-│   ├── r001.spec.ts
-│   └── uaWebdriver.spec.ts      # fingerprint validation
+│   ├── *.spec.ts                # getJobs(), batchAppendJobs(), jobDetails(), 
+│   ├── bisd.spec.ts             # containerized, CDP-gated, persistent browser profile
+│   └── uaWebdriver.spec.ts      # fingerprint validation test for specialContextPage
 ├── classes/
 │   ├── utilities.ts             # job types, dedup, batch writes, site registry
 │   ├── specialContextPage.ts    # CDP attach + navigator.webdriver patch
 │   └── cdpValidator.ts          # CDP port health, Chrome auto-launch
 ├── fixtures/
-│   ├── dom-fixtures/            # Archived DOM fixtures
 │   └── bisd-auth.ts             # cached login session + CDP context, worker scoped
 ├── test-data/                   # checked out from keithsecond/prospects-data
 │   ├── sites.json               # all configured employers
@@ -65,7 +40,7 @@ prospects/
 │   └── description/             # per-org enriched job details
 ├── bridge-to-career-ops.mjs     # feeds flat file job descriptions to career-ops
 ├── playwright.config.ts
-└── globalTeardown.ts
+└── globalTeardown.ts            # Consolidates batched jobResult files
 ```
 
 > **Note:** `test-data/` is the private sibling repo [`keithsecond/prospects-data`](https://github.com/keithsecond/prospects-data), checked out as a subdirectory by CI. It is not committed to this repo.
