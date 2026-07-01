@@ -1,4 +1,4 @@
-name: CDP Tests (uaWebdriver + BISD)
+name: CDP Tests (uaWebdriver)
 
 on:
   workflow_dispatch:
@@ -129,29 +129,11 @@ jobs:
         working-directory: prospects
         run: npx playwright install chromium
 
-      - name: Write BISD credentials
-        working-directory: prospects
-        env:
-          BISD_EMAIL: ${{ secrets.BISD_EMAIL }}
-          BISD_PASSWORD: ${{ secrets.BISD_PASSWORD }}
-        run: |
-          mkdir -p .auth
-          {
-            echo "BISD_EMAIL=$BISD_EMAIL"
-            echo "BISD_PASSWORD=$BISD_PASSWORD"
-          } > .auth/.env
-
       - name: Run uaWebdriver tests
         working-directory: prospects
         env:
           CI: 'true'
         run: npx playwright test tests/uaWebdriver.spec.ts
-
-      - name: Run BISD tests
-        working-directory: prospects
-        env:
-          CI: 'true'
-        run: npx playwright test tests/bisd.spec.ts
 
       - name: Show container logs on failure
         if: failure()
@@ -201,8 +183,3 @@ jobs:
       - name: Cleanup container
         if: always()
         run: docker rm -f "$CONTAINER_NAME" || true
-
-      - name: Cleanup credentials
-        if: always()
-        working-directory: prospects
-        run: rm -f .auth/.env

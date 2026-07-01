@@ -12,15 +12,13 @@ const upworkAuthFile = path.join(__dirname, '.auth', 'upwork-user.json');
 /**
  * Playwright config with two projects:
  *
- * 1. parallel-tests: All specs except bisd.spec.ts and uaWebdriver.spec.ts
- *    - ADP, Applitrack, ATJ, SchoolSpring, Eightfold, R001
+ * 1. parallel-tests: All specs except uaWebdriver.spec.ts
+ *    - ADP, Applitrack, ATJ, SchoolSpring, Eightfold, BISD (Oracle Cloud Recruiting), R001
  *    - Can run in parallel (multiple workers)
  *    - No CDP requirement
  *
- * 2. cdp-tests: Only bisd.spec.ts and uaWebdriver.spec.ts
+ * 2. cdp-tests: Only uaWebdriver.spec.ts
  *    - Requires Chrome DevTools Protocol on port 9222
- *    - Must run serially (1 worker) due to shared auth state
- *    - Requires BISD_EMAIL and BISD_PASSWORD
  *
  * Usage:
  *   npx playwright test                          # Runs both projects
@@ -52,7 +50,6 @@ export default defineConfig({
             testMatch: '**/*.spec.ts',
             testIgnore: [
                 '**/dom-tests/**',
-                '**/bisd.spec.ts',
                 '**/uaWebdriver.spec.ts',
             ],
             workers: process.env.CI ? 4 : undefined,
@@ -60,11 +57,9 @@ export default defineConfig({
         {
             name: 'cdp-tests',
             use: { ...devices['Desktop Chrome'] },
-            testMatch: ['**/bisd.spec.ts', '**/uaWebdriver.spec.ts'],
-            // CDP tests must run serially because:
-            // 1. bisd-auth.ts maintains a module-scoped cached login session
-            // 2. All tests connect to a single Chrome instance on port 9222
-            // 3. Multiple workers would contend on auth state and CDP connection
+            testMatch: ['**/uaWebdriver.spec.ts'],
+            // CDP tests must run serially because all tests connect to a
+            // single Chrome instance on port 9222.
             workers: 1,
         },
     ],

@@ -127,22 +127,10 @@ jobs:
         working-directory: prospects
         run: npx playwright install chromium
 
-      - name: Write BISD credentials
-        working-directory: prospects
-        env:
-          BISD_EMAIL: ${{ secrets.BISD_EMAIL }}
-          BISD_PASSWORD: ${{ secrets.BISD_PASSWORD }}
-        run: |
-          mkdir -p .auth
-          {
-            echo "BISD_EMAIL=$BISD_EMAIL"
-            echo "BISD_PASSWORD=$BISD_PASSWORD"
-          } > .auth/.env
-
       - name: Run all tests (parallel + CDP in one invocation)
         # Single Playwright invocation runs both projects:
-        # 1. parallel-tests (ADP, Applitrack, ATJ, SchoolSpring, Eightfold, R001)
-        # 2. cdp-tests (BISD + uaWebdriver)
+        # 1. parallel-tests (ADP, Applitrack, ATJ, SchoolSpring, Eightfold, BISD, R001)
+        # 2. cdp-tests (uaWebdriver)
         # globalTeardown runs once at the end, consolidating all batch writes
         working-directory: prospects
         env:
@@ -193,8 +181,3 @@ jobs:
       - name: Cleanup container
         if: always()
         run: docker rm -f "$CONTAINER_NAME" || true
-
-      - name: Cleanup credentials
-        if: always()
-        working-directory: prospects
-        run: rm -f .auth/.env

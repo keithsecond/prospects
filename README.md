@@ -25,14 +25,11 @@ prospects/
 ├── pages/                       # Per provider DOM or JSON API POMs
 ├── tests/
 │   ├── *.spec.ts                # getJobs(), batchAppendJobs(), jobDetails(), 
-│   ├── bisd.spec.ts             # containerized, CDP-gated, persistent browser profile
 │   └── uaWebdriver.spec.ts      # fingerprint validation test for specialContextPage
 ├── classes/
 │   ├── utilities.ts             # job types, dedup, batch writes, site registry
 │   ├── specialContextPage.ts    # CDP attach + navigator.webdriver patch
 │   └── cdpValidator.ts          # CDP port health, Chrome auto-launch
-├── fixtures/
-│   └── bisd-auth.ts             # cached login session + CDP context, worker scoped
 ├── test-data/                   # checked out from keithsecond/prospects-data
 │   ├── sites.json               # all configured employers
 │   ├── filters.json             # per-tenant Eightfold query params
@@ -51,30 +48,28 @@ prospects/
 
 **DOM scraping (Applitrack, ATJ).** Resilient locators against rendered pages. Applitrack and SchoolSpring detect the "no relevant categories" case and skip the site cleanly rather than failing the run.
 
-**Public JSON (Eightfold AI, SchoolSpring, ADP, Greenhouse, Ashby, Lever, SmartRecruiters, Recruitee).** The `Eightfold` page object constructs queries against `/api/pcsx/search`, paginates by `start` offset until `totalCount` is reached, then fetches `/api/pcsx/position_details` for each result. Per-tenant configuration — subdomain, domain, filter parameters — stored in `test-data/filters.json`. `Greenhouse`, `Ashby`, `Lever`, `SmartRecruiters`, and `Recruitee` follow the same shape against each platform's public job-board API, with the company/board slug parsed directly out of the configured `URL`: `Greenhouse` (`boards-api.greenhouse.io`) and `SmartRecruiters` (`api.smartrecruiters.com`) require a per-job detail request; `Ashby`, `Lever`, and `Recruitee` ship the full description inline in the listing payload, so `jobDetails()` re-fetches that same listing and filters it down rather than issuing per-job requests.
-
-**Authenticated JSON (BISD via Eightfold).** Same API family, behind a login wall and bot detection. Handled separately because the auth model and execution mode differ.
+**Public JSON (Eightfold AI, SchoolSpring, ADP, Greenhouse, Ashby, Lever, SmartRecruiters, Recruitee, Oracle Cloud Recruiting).** The `Eightfold` page object constructs queries against `/api/pcsx/search`, paginates by `start` offset until `totalCount` is reached, then fetches `/api/pcsx/position_details` for each result. Per-tenant configuration — subdomain, domain, filter parameters — stored in `test-data/filters.json`. `Greenhouse`, `Ashby`, `Lever`, `SmartRecruiters`, and `Recruitee` follow the same shape against each platform's public job-board API, with the company/board slug parsed directly out of the configured `URL`: `Greenhouse` (`boards-api.greenhouse.io`) and `SmartRecruiters` (`api.smartrecruiters.com`) require a per-job detail request; `Ashby`, `Lever`, and `Recruitee` ship the full description inline in the listing payload, so `jobDetails()` re-fetches that same listing and filters it down rather than issuing per-job requests. `OracleRecruiting` (BISD / Houston ISD) follows the same shape against Oracle Fusion Cloud Recruiting's public `recruitingCEJobRequisitions` / `recruitingCEJobRequisitionDetails` REST API, paginating by `offset` until `TotalJobsCount` is reached; the base URL, locale, and site number are parsed directly out of the configured candidate-experience `URL`.
 
 ---
 
 ## CDP
 
-BISD's career portal sits behind an Eightfold tenant with light, but active, automation detection. Authentication and a running Chrome process via the Chrome DevTools Protocol allows access.
+`uaWebdriver.spec.ts` validates `SpecialContextPage`'s fingerprint-evasion modes against a bot-detection test page. It is the only spec that still requires a running Chrome process reachable via the Chrome DevTools Protocol.
 
-`CDPValidator.isUnavailable()` checks whether CDP is available via port check and JSON check. If unavailable, a Chrome Debug respawn is attempted and the JSON endpoint is retried. Upon further failure, the BISD suite skips with `testInfo.skip()`.
+`CDPValidator.isUnavailable()` checks whether CDP is available via port check and JSON check. If unavailable, a Chrome Debug respawn is attempted and the JSON endpoint is retried. Upon further failure, the test skips with `testInfo.skip()`.
 
 `SpecialContextPage` exposes two modes:
 
 - `cdpBrowser()` — attaches to the live Chrome instance and uses the persistent context inside it
 - `noNavigator()` — for lighter detection, creates a fresh context and patches `navigator.webdriver` out of the prototype chain at `addInitScript` time
 
-The BISD fixture (`fixtures/bisd-auth.ts`) caches the authenticated session at worker scope, so all tests in the bisd spec reuse the same login and run serially.
+> BISD (Houston ISD) previously ran behind an Eightfold tenant with active bot detection, requiring Google OAuth login through this CDP-backed browser. Houston ISD has since migrated its career portal to Oracle Fusion Cloud Recruiting, whose candidate-experience site is a plain public job board — no login and no CDP are needed anymore, so BISD now runs as a regular `parallel-tests` spec via the `OracleRecruiting` page object.
 
 ---
 
 ## DOM to API migration
 
-Providers initially used DOM scraping for resilience. Discovery of public APIs (SchoolSpring, BISD/Eightfold) showed 20–30x speed improvements with no reliability tradeoff. DOM implementations are archived in `pages/dom-pages/`, `fixtures/dom-fixtures/`, and `tests/dom-tests/`, and excluded via `testIgnore: '**/dom-tests/**'` in `playwright.config.ts`.
+Providers initially used DOM scraping for resilience. Discovery of public APIs (SchoolSpring, ADP) showed 20–30x speed improvements with no reliability tradeoff. DOM implementations are archived in `pages/dom-pages/`, `fixtures/dom-fixtures/`, and `tests/dom-tests/`, and excluded via `testIgnore: '**/dom-tests/**'` in `playwright.config.ts`. BISD's prior Eightfold-based implementation was removed outright rather than archived when Houston ISD migrated its career portal to Oracle Fusion Cloud Recruiting — the old tenant no longer exists, so there was no fallback value in keeping it.
 
 ---
 
@@ -211,7 +206,7 @@ node bridge-to-career-ops.mjs --reset-state
 Two `workflow_dispatch` workflows run on a self-hosted macOS runner:
 
 - **`prospects-tests.yml`** — full test suite (all providers, parallel + CDP)
-- **`cdp-tests.yml`** — CDP-only subset (uaWebdriver + BISD)
+- **`cdp-tests.yml`** — CDP-only subset (uaWebdriver)
 
 Both workflows:
 1. Check out `prospects`, `keithsecond/headed-chrome-cdp-mac`, and `keithsecond/prospects-data` (as `test-data/`)
