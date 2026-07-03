@@ -65,7 +65,7 @@ export const PROVIDERS: ProviderConfig[] = [
         domain: 'eightfold.ai',
         extractUrl: (href) => {
             const m = href.match(/^https:\/\/([a-z0-9-]+\.eightfold\.ai)/);
-            return m ? `https://${m[1]}` : null;
+            return m ? `https://${m[1]}/careers` : null;
         },
     },
 ];
