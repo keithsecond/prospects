@@ -13,8 +13,8 @@ export type DiscoveredSite = {
 };
 
 const MAX_PAGES = 3;
-const MIN_NEXT_DELAY_MS = 5000;
-const MAX_NEXT_DELAY_MS = 17000;
+const MIN_NEXT_DELAY_MS = 3000;
+const MAX_NEXT_DELAY_MS = 7000;
 
 // Each extractUrl mirrors the URL-parsing regex the corresponding page
 // object (pages/ashby.ts, pages/greenhouse.ts, ...) already applies to
