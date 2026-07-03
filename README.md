@@ -69,7 +69,7 @@ prospects/
 
 ## DOM to API migration
 
-Providers initially used DOM scraping for resilience. Discovery of public APIs (SchoolSpring, ADP) showed 20–30x speed improvements with no reliability tradeoff. DOM implementations are archived in `pages/dom-pages/`, `fixtures/dom-fixtures/`, and `tests/dom-tests/`, and excluded via `testIgnore: '**/dom-tests/**'` in `playwright.config.ts`. BISD's prior Eightfold-based implementation was removed outright rather than archived when Houston ISD migrated its career portal to Oracle Fusion Cloud Recruiting — the old tenant no longer exists, so there was no fallback value in keeping it.
+Providers initially used DOM scraping for resilience. Discovery of public APIs (SchoolSpring, BISD/Eightfold, ADP) showed 20–30x speed improvements with no reliability tradeoff. DOM implementations are archived in `pages/dom-pages/`, `fixtures/dom-fixtures/`, and `tests/dom-tests/`, and excluded via `testIgnore: '**/dom-tests/**'` in `playwright.config.ts`.
 
 ---
 
