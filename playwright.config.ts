@@ -22,10 +22,16 @@ const upworkAuthFile = path.join(__dirname, '.auth', 'upwork-user.json');
  *    - Must run serially (1 worker) due to shared auth state
  *    - Requires BISD_EMAIL and BISD_PASSWORD
  *
+ * 3. discovery: Only googleDiscovery.spec.ts
+ *    - Manual/on-demand only — deliberately excluded from CI, which pins
+ *      --project=parallel-tests --project=cdp-tests rather than running bare
+ *    - Requires Chrome DevTools Protocol on port 9222
+ *
  * Usage:
- *   npx playwright test                          # Runs both projects
+ *   npx playwright test                          # Runs ALL projects, including discovery
  *   npx playwright test --project=parallel-tests # Runs only parallel tests (fast)
  *   npx playwright test --project=cdp-tests      # Runs only CDP tests (requires Chrome on 9222)
+ *   npx playwright test --project=discovery      # Runs only Google discovery (requires Chrome on 9222)
  */
 export default defineConfig({
     testDir: './tests',
@@ -54,6 +60,7 @@ export default defineConfig({
                 '**/dom-tests/**',
                 '**/bisd.spec.ts',
                 '**/uaWebdriver.spec.ts',
+                '**/googleDiscovery.spec.ts',
             ],
             workers: process.env.CI ? 4 : undefined,
         },
@@ -65,6 +72,17 @@ export default defineConfig({
             // 1. bisd-auth.ts maintains a module-scoped cached login session
             // 2. All tests connect to a single Chrome instance on port 9222
             // 3. Multiple workers would contend on auth state and CDP connection
+            workers: 1,
+        },
+        {
+            // Manual/on-demand Google-search discovery — not part of the
+            // automatic CI sweep (see workflow files: they pin
+            // --project=parallel-tests --project=cdp-tests explicitly).
+            // Run with: npx playwright test tests/googleDiscovery.spec.ts --project=discovery
+            name: 'discovery',
+            use: { ...devices['Desktop Chrome'] },
+            testMatch: ['**/googleDiscovery.spec.ts'],
+            // Serial: shares the same CDP browser/profile as cdp-tests.
             workers: 1,
         },
     ],
