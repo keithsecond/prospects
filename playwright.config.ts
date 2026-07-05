@@ -10,9 +10,10 @@ const upworkAuthFile = path.join(__dirname, '.auth', 'upwork-user.json');
 /* eslint-enable @typescript-eslint/no-unused-vars */
 
 /**
- * Playwright config with two projects:
+ * Playwright config with four projects:
  *
- * 1. parallel-tests: All specs except bisd.spec.ts and uaWebdriver.spec.ts
+ * 1. parallel-tests: All specs except bisd.spec.ts, uaWebdriver.spec.ts,
+ *    googleDiscovery.spec.ts, and sdetSearch.spec.ts
  *    - ADP, Applitrack, ATJ, SchoolSpring, Eightfold, R001
  *    - Can run in parallel (multiple workers)
  *    - No CDP requirement
@@ -27,11 +28,17 @@ const upworkAuthFile = path.join(__dirname, '.auth', 'upwork-user.json');
  *      --project=parallel-tests --project=cdp-tests rather than running bare
  *    - Requires Chrome DevTools Protocol on port 9222
  *
+ * 4. sdet-search: Only sdetSearch.spec.ts
+ *    - Triggered by sdet-search.yml workflow
+ *    - Searches all 6 API-based providers for SDET-titled jobs
+ *    - No CDP requirement (pure JSON API calls)
+ *
  * Usage:
  *   npx playwright test                          # Runs ALL projects, including discovery
  *   npx playwright test --project=parallel-tests # Runs only parallel tests (fast)
  *   npx playwright test --project=cdp-tests      # Runs only CDP tests (requires Chrome on 9222)
  *   npx playwright test --project=discovery      # Runs only Google discovery (requires Chrome on 9222)
+ *   npx playwright test --project=sdet-search    # Runs only SDET keyword search
  */
 export default defineConfig({
     testDir: './tests',
@@ -61,6 +68,7 @@ export default defineConfig({
                 '**/bisd.spec.ts',
                 '**/uaWebdriver.spec.ts',
                 '**/googleDiscovery.spec.ts',
+                '**/sdetSearch.spec.ts',
             ],
             workers: process.env.CI ? 4 : undefined,
         },
@@ -84,6 +92,16 @@ export default defineConfig({
             testMatch: ['**/googleDiscovery.spec.ts'],
             // Serial: shares the same CDP browser/profile as cdp-tests.
             workers: 1,
+        },
+        {
+            // SDET keyword search — triggered by sdet-search.yml workflow.
+            // Fetches all jobs from 6 API-based providers and retains only
+            // those with "SDET" in the title (Eightfold queries natively).
+            // No CDP required — these are all pure JSON API calls.
+            name: 'sdet-search',
+            use: { ...devices['Desktop Chrome'] },
+            testMatch: ['**/sdetSearch.spec.ts'],
+            workers: process.env.CI ? 4 : undefined,
         },
     ],
 });
