@@ -1,0 +1,91 @@
+name: SDET Job Search
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Runs daily at 06:00 UTC (midnight CDT / 01:00 CST)
+    - cron: '0 6 * * *'
+
+# One run at a time — avoids concurrent push conflicts to prospects-data.
+concurrency:
+  group: sdet-search
+  cancel-in-progress: false
+
+jobs:
+  sdet-search:
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 30
+
+    env:
+      DATA_REPO: keithsecond/prospects-data
+      DATA_REF: main
+
+    steps:
+      - name: Checkout prospects repo
+        uses: actions/checkout@v4.2.0
+        with:
+          path: prospects
+
+      - name: Checkout prospects-data repo
+        uses: actions/checkout@v4.2.0
+        with:
+          repository: ${{ env.DATA_REPO }}
+          ref: ${{ env.DATA_REF }}
+          token: ${{ secrets.DATA_REPO_PAT }}
+          path: prospects/test-data
+          persist-credentials: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v4.1.0
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: prospects/package-lock.json
+
+      - name: Install dependencies
+        working-directory: prospects
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        working-directory: prospects
+        run: npx playwright install chromium
+
+      - name: Search for SDET jobs across all providers
+        working-directory: prospects
+        env:
+          CI: 'true'
+        run: npx playwright test --project=sdet-search
+
+      - name: Commit updated test-data to prospects-data
+        if: success()
+        working-directory: prospects/test-data
+        run: |
+          git config user.email "ci@prospects.local"
+          git config user.name "Prospects CI"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No test-data changes to commit"
+            exit 0
+          fi
+          git commit -m "SDET search update from CI run ${{ github.run_id }}"
+          for i in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            echo "Push failed (attempt $i) — rebasing and retrying..."
+            git pull --rebase
+            sleep $((RANDOM % 5 + 1))
+          done
+          echo "Failed to push test-data updates after 3 attempts" >&2
+          exit 1
+
+      - name: Upload Playwright reports
+        if: always()
+        uses: actions/upload-artifact@v4.5.0
+        with:
+          name: sdet-search-diagnostics-${{ github.run_id }}
+          path: |
+            prospects/test-results/**
+            prospects/playwright-report/**
+          retention-days: 14
+          if-no-files-found: ignore
