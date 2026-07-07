@@ -50,15 +50,28 @@ export class Lever {
         const data = await response?.json() as any;
         if (!Array.isArray(data)) return [];
         const wantedIds = new Set(jobs.map(j => j.id));
+        
         return data
             .filter((job: any) => wantedIds.has(String(job.id)))
             .map((job: any) => ({
                 title: job.text,
                 displayJobId: String(job.id),
                 department: job.categories?.team || '',
-                description: job.descriptionPlain + " " + job.descriptionBodyPlain,
+                description: convertHtml(job.descriptionBody + " " + job.descriptionBodyPlain + " " + job.lists.flatMap((item: any) => Object.values(item)).join(', ')),
                 location: job.categories?.location || '',
                 entityId: String(job.id),
             }));
     }
+}
+
+function convertHtml(htmlString: string): string {
+    return htmlString
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/p>/gi, '\n')
+        .replace(/&#13;/gi, '\n')
+        .replace(/<[^>]*>/g, '')
+        .replace(/&ndash;/gi, ' - ')
+        .replace(/&amp;/gi, '&')
+        .replace(/&nbsp;/g, ' ')
+        .trim();
 }
