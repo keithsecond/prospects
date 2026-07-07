@@ -56,7 +56,7 @@ export class Lever {
                 title: job.text,
                 displayJobId: String(job.id),
                 department: job.categories?.team || '',
-                description: typeof job.descriptionPlain === 'string' ? job.descriptionPlain : '',
+                description: job.descriptionPlain + " " + job.descriptionBodyPlain,
                 location: job.categories?.location || '',
                 entityId: String(job.id),
             }));
