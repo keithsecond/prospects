@@ -12,6 +12,7 @@ export class Applitrack {
     title: Locator;
     jobId: Locator;
     attachment: Locator;
+    description: Locator;
     noAdmin: boolean;
 
     /**
@@ -28,6 +29,7 @@ export class Applitrack {
         this.title = page.locator('#wrapword');
         this.jobId = page.locator('.title2');
         this.attachment = page.locator('.AppliTrackJobPostingAttachments a[href*="BrowseFile"]');
+        this.description = page.locator('.postingsList span.normal').filter({ has: page.locator('p') });
     }
 
 
@@ -88,11 +90,23 @@ export class Applitrack {
     }
 
     /**
+     * Resolves the job description, preferring the Word attachment linked from the
+     * current job posting. Falls back to the description embedded in the page itself
+     * when no attachment is present.
+     * @returns {Promise<string>} Extracted description text, or empty string if unavailable
+     */
+    private async getAttachmentDescription(): Promise<string> {
+        const attachmentText = await this.getAttachmentText();
+        if (attachmentText) return attachmentText;
+        return (await this.description.first().innerText().catch(() => '')).trim();
+    }
+
+    /**
      * Downloads the Word attachment linked from the current job posting
      * and extracts its plain text content.
      * @returns {Promise<string>} Extracted description text, or empty string if unavailable
      */
-    private async getAttachmentDescription(): Promise<string> {
+    private async getAttachmentText(): Promise<string> {
         const link = this.attachment.first();
         if (await link.count() === 0) return '';
         const fileName = await link.innerText();
