@@ -14,6 +14,7 @@ export class Applitrack {
     jobId: Locator;
     attachment: Locator;
     description: Locator;
+    department: Locator;
     noAdmin: boolean;
 
     /**
@@ -31,6 +32,7 @@ export class Applitrack {
         this.jobId = page.locator('.title2');
         this.attachment = page.locator('.AppliTrackJobPostingAttachments a[href*="BrowseFile"]');
         this.description = page.locator('.postingsList span.normal').filter({ has: page.locator('p') });
+        this.department = page.locator('li').filter({ has: page.locator('span.label', { hasText: 'Location:' }) }).locator('span.normal');
     }
 
 
@@ -79,10 +81,11 @@ export class Applitrack {
         for (const job of jobs) {
             await this.page.goto(job.link);
             const description = await this.getAttachmentDescription();
+            const department = await this.department.first().innerText().catch(() => '');
             rawDetails.push({
                 title: job.title,
                 displayJobId: job.id,
-                department: '',
+                department,
                 description,
                 entityId: job.id,
             });
