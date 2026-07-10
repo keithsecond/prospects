@@ -1,6 +1,7 @@
 import { Locator, Page } from '@playwright/test';
 import { Job, JobDetails, Utilities } from '@classes/utilities';
 import WordExtractor from 'word-extractor';
+import pdfParse from 'pdf-parse';
 
 const extractor = new WordExtractor();
 
@@ -62,7 +63,7 @@ export class Applitrack {
 
     /**
      * Fetches job detail records for the given jobs.
-     * Description text is extracted from the Word (.doc/.docx) attachment on each job posting.
+     * Description text is extracted from the Word or PDF attachment on each job posting.
      * @param {Job[]} jobs - Jobs to fetch details for
      * @returns {Promise<JobDetails[]>} Detailed job records
      */
@@ -102,15 +103,17 @@ export class Applitrack {
     }
 
     /**
-     * Downloads the Word attachment linked from the current job posting
-     * and extracts its plain text content.
+     * Downloads the document attachment linked from the current job posting
+     * and extracts its plain text content. AppliTrack doesn't always serve the
+     * file format the attachment's displayed name implies, so the file's own
+     * magic bytes (not its extension) decide which parser to use.
      * @returns {Promise<string>} Extracted description text, or empty string if unavailable
      */
     private async getAttachmentText(): Promise<string> {
         const link = this.attachment.first();
         if (await link.count() === 0) return '';
         const fileName = await link.innerText();
-        if (!/\.docx?$/i.test(fileName.trim())) return '';
+        if (!/\.(docx?|pdf)$/i.test(fileName.trim())) return '';
         const href = await link.getAttribute('href');
         if (!href) return '';
         const url = new URL(href, this.page.url()).toString();
@@ -118,6 +121,10 @@ export class Applitrack {
         if (!response.ok()) return '';
         const buffer = await response.body();
         try {
+            if (buffer.subarray(0, 4).toString('latin1') === '%PDF') {
+                const data = await pdfParse(buffer);
+                return data.text.trim();
+            }
             const doc = await extractor.extract(buffer);
             return doc.getBody().trim();
         } catch (err) {
