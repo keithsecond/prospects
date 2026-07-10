@@ -8,7 +8,7 @@ import { Eightfold } from '@pages/eightfold';
 import { Utilities, Job } from '@classes/utilities';
 import filters from '../test-data/filters.json';
 
-const SDET = /sdet|software development engineer in test/i;
+const SDET = /sdet|software development engineer in test|quality|quality assurance|test/i;
 const utils = new Utilities();
 
 function sdetOnly(jobs: Job[]): Job[] {
