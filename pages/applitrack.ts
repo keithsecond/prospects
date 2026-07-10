@@ -99,8 +99,7 @@ export class Applitrack {
     private async getAttachmentDescription(): Promise<string> {
         const attachmentText = await this.getAttachmentText();
         if (attachmentText) return attachmentText;
-        const html = await this.description.first().innerHTML().catch(() => '');
-        return convertHtml(html);
+        return (await this.description.first().innerText().catch(() => '')).trim();
     }
 
     /**
@@ -133,16 +132,4 @@ export class Applitrack {
             return '';
         }
     }
-}
-
-function convertHtml(htmlString: string): string {
-    return htmlString
-        .replace(/<br\s*\/?>/gi, '\n')
-        .replace(/<\/p>/gi, '\n')
-        .replace(/&#13;/gi, '\n')
-        .replace(/<[^>]*>/g, '')
-        .replace(/&ndash;/gi, ' - ')
-        .replace(/&amp;/gi, '&')
-        .replace(/&nbsp;/g, ' ')
-        .trim();
 }
