@@ -1,6 +1,8 @@
 import { Locator, Page } from '@playwright/test';
 import { Job, JobDetails, Utilities } from '@classes/utilities';
-import JSZip from 'jszip';
+import WordExtractor from 'word-extractor';
+
+const extractor = new WordExtractor();
 
 export class Applitrack {
     page: Page;
@@ -58,7 +60,7 @@ export class Applitrack {
 
     /**
      * Fetches job detail records for the given jobs.
-     * Description text is extracted from the .docx attachment on each job posting.
+     * Description text is extracted from the Word (.doc/.docx) attachment on each job posting.
      * @param {Job[]} jobs - Jobs to fetch details for
      * @returns {Promise<JobDetails[]>} Detailed job records
      */
@@ -73,13 +75,10 @@ export class Applitrack {
 
         for (const job of jobs) {
             await this.page.goto(job.link);
-            const title = (await this.title.first().innerText().catch(() => '')) || job.title;
-            const jobNumber = await this.jobId.first().innerText().catch(() => '');
-            const displayJobId = jobNumber.replace(/\D/g, '') || job.id;
             const description = await this.getAttachmentDescription();
             rawDetails.push({
-                title,
-                displayJobId,
+                title: job.title,
+                displayJobId: job.id,
                 department: '',
                 description,
                 entityId: job.id,
@@ -89,7 +88,7 @@ export class Applitrack {
     }
 
     /**
-     * Downloads the .docx attachment linked from the current job posting
+     * Downloads the Word attachment linked from the current job posting
      * and extracts its plain text content.
      * @returns {Promise<string>} Extracted description text, or empty string if unavailable
      */
@@ -105,26 +104,14 @@ export class Applitrack {
             const response = await this.page.request.get(url);
             if (!response.ok()) continue;
             const buffer = await response.body();
-            return await extractDocxText(buffer);
+            try {
+                const doc = await extractor.extract(buffer);
+                return doc.getBody().trim();
+            } catch (err) {
+                console.error(`Failed to extract text from attachment: ${err}`);
+                return '';
+            }
         }
         return '';
     }
-}
-
-async function extractDocxText(buffer: Buffer): Promise<string> {
-    const zip = await JSZip.loadAsync(buffer);
-    const xml = await zip.file('word/document.xml')?.async('text');
-    if (!xml) return '';
-    return xml
-        .replace(/<w:tab\s*\/>/g, '\t')
-        .replace(/<\/w:p>/g, '\n')
-        .replace(/<w:br\s*\/>/g, '\n')
-        .replace(/<[^>]+>/g, '')
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .replace(/&apos;/g, "'")
-        .replace(/\n{3,}/g, '\n\n')
-        .trim();
 }
