@@ -93,25 +93,22 @@ export class Applitrack {
      * @returns {Promise<string>} Extracted description text, or empty string if unavailable
      */
     private async getAttachmentDescription(): Promise<string> {
-        const count = await this.attachment.count();
-        for (let i = 0; i < count; i++) {
-            const link = this.attachment.nth(i);
-            const fileName = await link.innerText();
-            if (!/\.docx?$/i.test(fileName.trim())) continue;
-            const href = await link.getAttribute('href');
-            if (!href) continue;
-            const url = new URL(href, this.page.url()).toString();
-            const response = await this.page.request.get(url);
-            if (!response.ok()) continue;
-            const buffer = await response.body();
-            try {
-                const doc = await extractor.extract(buffer);
-                return doc.getBody().trim();
-            } catch (err) {
-                console.error(`Failed to extract text from attachment: ${err}`);
-                return '';
-            }
+        const link = this.attachment.first();
+        if (await link.count() === 0) return '';
+        const fileName = await link.innerText();
+        if (!/\.docx?$/i.test(fileName.trim())) return '';
+        const href = await link.getAttribute('href');
+        if (!href) return '';
+        const url = new URL(href, this.page.url()).toString();
+        const response = await this.page.request.get(url);
+        if (!response.ok()) return '';
+        const buffer = await response.body();
+        try {
+            const doc = await extractor.extract(buffer);
+            return doc.getBody().trim();
+        } catch (err) {
+            console.error(`Failed to extract text from attachment: ${err}`);
+            return '';
         }
-        return '';
     }
 }
