@@ -1,5 +1,9 @@
 import { Locator, Page } from '@playwright/test';
-import { Job, Utilities } from '@classes/utilities';
+import { Job, JobDetails, Utilities } from '@classes/utilities';
+import WordExtractor from 'word-extractor';
+import pdfParse from 'pdf-parse';
+
+const extractor = new WordExtractor();
 
 export class Applitrack {
     page: Page;
@@ -7,7 +11,10 @@ export class Applitrack {
     noResults: Locator;
     job: Locator;
     title: Locator;
-    jobId: Locator; 
+    jobId: Locator;
+    attachment: Locator;
+    description: Locator;
+    department: Locator;
     noAdmin: boolean;
 
     /**
@@ -16,19 +23,22 @@ export class Applitrack {
      * @param id Optional site ID used to look up the URL from Utilities.URLS.
      */
     constructor(page: Page, id?: string) {
-        this.page = page; 
+        this.page = page;
         this.id = id || '';
         this.noAdmin = false;
         this.noResults = page.locator('.normal', {hasText: ' (no results)'})
         this.job = page.locator('.postingsList');
         this.title = page.locator('#wrapword');
         this.jobId = page.locator('.title2');
+        this.attachment = page.locator('.AppliTrackJobPostingAttachments a[href*="BrowseFile"]');
+        this.description = page.locator('.postingsList span.normal').filter({ has: page.locator('p') });
+        this.department = page.locator('li').filter({ has: page.locator('span.label', { hasText: 'Location:' }) }).locator('span.normal');
     }
 
 
     async searchPage() {
         const url = Utilities.URLS[this.id];
-        const url1 = await this.page.goto(url);
+        await this.page.goto(url);
         if (await this.noResults.count() >= 1) {
             return (this.noAdmin = true);
         }
@@ -51,5 +61,67 @@ export class Applitrack {
             rawJobs.push({ id, title, link });
         }
         return Utilities.normalizeJobs(rawJobs);
+    }
+
+    /**
+     * @param {Job[]} jobs - Jobs to fetch details for
+     * @returns {Promise<JobDetails[]>} Detailed job records
+     */
+    async jobDetails(jobs: Job[]): Promise<JobDetails[]> {
+        const rawDetails = [] as Array<{
+            title: string;
+            displayJobId: string;
+            department: string;
+            description: string;
+            entityId: string;
+        }>;
+
+        for (const job of jobs) {
+            await this.page.goto(job.link);
+            const description = await this.getAttachmentDescription();
+            const department = await this.department.first().innerText() || '';
+            rawDetails.push({
+                title: job.title,
+                displayJobId: job.id,
+                department: department,
+                description: description,
+                entityId: job.id,
+            });
+        }
+        return rawDetails;
+    }
+
+    private async getAttachmentDescription(): Promise<string> {
+        const attachmentText = await this.getAttachmentText();
+        if (attachmentText) return attachmentText;
+        return (await this.description.first().innerText().catch(() => '')).trim();
+    }
+
+    /**
+     * Read the file's magic bytes (not its extension) decide which parser to use.
+     * @returns {Promise<string>} Extracted description text, or empty string if unavailable
+     */
+    private async getAttachmentText(): Promise<string> {
+        const link = this.attachment.first();
+        if (await link.count() === 0) return '';
+        const fileName = await link.innerText();
+        if (!/\.(docx?|pdf)$/i.test(fileName.trim())) return '';
+        const href = await link.getAttribute('href');
+        if (!href) return '';
+        const url = new URL(href, this.page.url()).toString();
+        const response = await this.page.request.get(url);
+        if (!response.ok()) return '';
+        const buffer = await response.body();
+        try {
+            if (buffer.subarray(0, 4).toString('latin1') === '%PDF') {
+                const data = await pdfParse(buffer);
+                return data.text.trim();
+            }
+            const doc = await extractor.extract(buffer);
+            return doc.getBody().trim();
+        } catch (err) {
+            console.error(`Failed to extract text from attachment: ${err}`);
+            return '';
+        }
     }
 }
