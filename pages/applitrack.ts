@@ -79,7 +79,7 @@ export class Applitrack {
         for (const job of jobs) {
             await this.page.goto(job.link);
             const description = await this.getAttachmentDescription();
-            const department = await this.department.innerText();
+            const department = await this.department.first().innerText() || '');
             rawDetails.push({
                 title: job.title,
                 displayJobId: job.id,
