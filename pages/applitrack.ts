@@ -85,8 +85,8 @@ export class Applitrack {
             rawDetails.push({
                 title: job.title,
                 displayJobId: job.id,
-                department,
-                description,
+                department: department,
+                description: description,
                 entityId: job.id,
             });
         }
