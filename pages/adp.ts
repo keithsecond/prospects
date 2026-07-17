@@ -82,7 +82,7 @@ export class ADP {
                 department: '',
                 description: description,
                 location: locations,
-                entityId: data.itemID,
+                entityId: String(data.itemID),
             });
         }
         return rawDetails;
