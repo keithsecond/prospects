@@ -131,7 +131,9 @@ test.describe('SDET Search — Eightfold', () => {
     let accJobs: Job[] = [];
     let seenIds = new Set<string>();
 
-    for (const [siteId, site] of Object.entries(filters)) {
+    // Only the filter-less `sdetOnly` tenants are keyword-searched here; the
+    // filtered tenants in the root of filters.json are handled by eightfold.spec.ts.
+    for (const [siteId, site] of Object.entries((filters as any).sdetOnly ?? {}) as [string, any][]) {
         test.beforeAll(async () => {
             const persistedIds = await Utilities.getSiteJobIds(siteId);
             for (const id of persistedIds) seenIds.add(id);
