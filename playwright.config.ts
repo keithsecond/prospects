@@ -70,7 +70,6 @@ export default defineConfig({
                 '**/googleDiscovery.spec.ts',
                 '**/sdetSearch.spec.ts',
                 '**/ashby.spec.ts',
-                '**/eightfold.spec.ts',
                 '**/greenhouse.spec.ts',
                 '**/lever.spec.ts',
                 '**/recruitee.spec.ts',
