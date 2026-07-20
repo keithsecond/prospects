@@ -82,12 +82,18 @@ function randomDelayMs(): number {
 // prefer "<title> at <Org>" text from the result heading, else title-case
 // the URL slug/subdomain.
 function deriveOrgName(url: string, title: string): string {
-    const atMatch = title.match(/ at ([A-Z][\w&.,'’-]*(?:\s+[A-Z][\w&.,'’-]*)*)/);
+    const atMatch = title.match(/ at ([A-Z][\w&.,''-]*(?:\s+[A-Z][\w&.,''-]*)*)/);
     if (atMatch) return atMatch[1].trim();
 
     const host = url.replace(/^https?:\/\//, '');
     const parts = host.split('/');
-    const slug = parts.length > 1 ? parts[parts.length - 1] : parts[0].split('.')[0];
+    let slug = parts.length > 1 ? parts[parts.length - 1] : parts[0].split('.')[0];
+    
+    // If slug is just "careers", use the subdomain instead
+    if (slug.toLowerCase() === 'careers') {
+        slug = parts[0].split('.')[0];
+    }
+    
     return slug
         .replace(/[-_]+/g, ' ')
         .split(' ')
