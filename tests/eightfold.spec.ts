@@ -21,7 +21,12 @@ test.describe(() => {
     return;
     }
 
-    for (const [siteId, site] of Object.entries(filters)) {
+    // filters.json now carries a `sdetOnly` object alongside the filtered
+    // tenants; exclude it so this suite keeps searching only the filtered
+    // eightfold sites (sdetOnly is handled by sdetSearch.spec.ts).
+    const { sdetOnly, ...filtered } = filters as Record<string, any>;
+
+    for (const [siteId, site] of Object.entries(filtered)) {
         test.beforeAll( async ({}) => {
             const persistedIds = await Utilities.getSiteJobIds(siteId);
             for (const id of persistedIds) {

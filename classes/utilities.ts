@@ -3,6 +3,13 @@ import path from 'path';
 import sites from '../test-data/sites.json';
 import filters from '../test-data/filters.json';
 
+// filters.json mixes id-keyed eightfold tenants (each with a `filters` block)
+// with a `sdetOnly` object of filter-less tenants. Separate the two: the
+// filtered tenants drive eightfold.spec.ts, the sdetOnly ones drive
+// sdetSearch.spec.ts.
+const { sdetOnly: eightfoldSdetOnly = {}, ...eightfoldFiltered } =
+    filters as Record<string, unknown>;
+
 // ─────────────────────────────────────────────
 // SECTION 1: Types / Interfaces
 // ─────────────────────────────────────────────
@@ -62,9 +69,21 @@ export class Utilities {
         ...sites.Employers,
     ];
 
-    private static readonly ALL_EIGHTFOLD = Object.values(
-        filters as Record<string, EightfoldSite>
+    // The lookup maps below span both filtered and sdetOnly eightfold tenants so
+    // every eightfold id resolves for URL/domain/org lookups and job-id
+    // persistence, regardless of which spec searches it.
+    private static readonly ALL_EIGHTFOLD_FILTERED = Object.values(
+        eightfoldFiltered as Record<string, EightfoldSite>
     );
+
+    static readonly EIGHTFOLD_SDET_ONLY = Object.values(
+        eightfoldSdetOnly as Record<string, Omit<EightfoldSite, 'filters'>>
+    );
+
+    private static readonly ALL_EIGHTFOLD = [
+        ...Utilities.ALL_EIGHTFOLD_FILTERED,
+        ...Utilities.EIGHTFOLD_SDET_ONLY,
+    ];
 
     static readonly URLS = Object.fromEntries(
         [
