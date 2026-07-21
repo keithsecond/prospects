@@ -16,6 +16,7 @@ function sdetOnly(jobs: Job[]): Job[] {
 }
 
 test.describe('SDET Search — Ashby', () => {
+    test.slow();
     const sites = Utilities.getSitesByProvider('ashby');
     let accJobs: Job[] = [];
     let seenIds = new Set<string>();
@@ -38,6 +39,7 @@ test.describe('SDET Search — Ashby', () => {
 });
 
 test.describe('SDET Search — Greenhouse', () => {
+    test.slow();
     const sites = Utilities.getSitesByProvider('greenhouse');
     let accJobs: Job[] = [];
     let seenIds = new Set<string>();
@@ -60,6 +62,7 @@ test.describe('SDET Search — Greenhouse', () => {
 });
 
 test.describe('SDET Search — Lever', () => {
+    test.slow();
     const sites = Utilities.getSitesByProvider('lever');
     let accJobs: Job[] = [];
     let seenIds = new Set<string>();
@@ -82,6 +85,7 @@ test.describe('SDET Search — Lever', () => {
 });
 
 test.describe('SDET Search — SmartRecruiters', () => {
+    test.slow();
     const sites = Utilities.getSitesByProvider('smartrecruiters');
     let accJobs: Job[] = [];
     let seenIds = new Set<string>();
@@ -104,6 +108,7 @@ test.describe('SDET Search — SmartRecruiters', () => {
 });
 
 test.describe('SDET Search — Recruitee', () => {
+    test.slow();
     const sites = Utilities.getSitesByProvider('recruitee');
     let accJobs: Job[] = [];
     let seenIds = new Set<string>();
@@ -128,6 +133,7 @@ test.describe('SDET Search — Recruitee', () => {
 // Eightfold supports native keyword search via the `query` param — pass 'sdet'
 // directly to the API rather than fetching all positions and filtering client-side.
 test.describe('SDET Search — Eightfold', () => {
+    test.slow();
     let accJobs: Job[] = [];
     let seenIds = new Set<string>();
 
@@ -141,10 +147,9 @@ test.describe('SDET Search — Eightfold', () => {
 
         test(site.org, async ({ page }) => {
             const ef = new Eightfold(page, site.subdomain, site.domain);
-            const jobs = await ef.getJobs({
-                ...site.filters as Record<string, string | string[]>,
-                query: 'sdet',
-            });
+            const jobs = sdetOnly(await ef.getJobs({
+                ...site.filters as Record<string, string | string[]>
+            }));
             if (!jobs.length) return;
             const newJobs = jobs.filter(j => !seenIds.has(j.id));
             newJobs.forEach(j => seenIds.add(j.id));
